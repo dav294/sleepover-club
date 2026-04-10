@@ -110,16 +110,7 @@
       "venue": "The Big Romance",
       "artistIds": [],
       "doorsTime": "20:00",
-      "gallery": [
-        "assets/images/uploads/1775821146526-walshy-party-12.jpg",
-        "assets/images/uploads/1775821146542-walshy-party-8.jpg",
-        "assets/images/uploads/1775821215764-walshy-party-6.jpg",
-        "assets/images/uploads/1775821215793-walshy-party-1.jpg",
-        "assets/images/uploads/1775821227834-walshy-party-8.jpg",
-        "assets/images/uploads/1775821227887-walshy-party-1.jpg",
-        "assets/images/uploads/1775821285711-walshy-party-13.jpg",
-        "assets/images/uploads/1775821285731-walshy-party-12.jpg"
-      ],
+      "gallery": [],
       "status": "past",
       "address": "",
       "country": "Ireland",
