@@ -99,40 +99,53 @@
       var files = Array.from(fileList).filter(function (f) { return f.type.startsWith('image/'); });
       if (!files.length) return;
 
-      self.setState({
-        uploading: true,
-        progress: files.map(function (f) { return { name: f.name, status: 'uploading' }; }),
+      // Mark all files as queued, then upload one at a time.
+      // GitHub's API rejects concurrent write requests — sequential is required.
+      var initialProgress = files.map(function (f) {
+        return { name: f.name, status: 'queued' };
       });
+      self.setState({ uploading: true, progress: initialProgress });
 
-      Promise.allSettled(
-        files.map(function (file, i) {
-          return uploadFileToGitHub(file, token)
-            .then(function (path) {
-              self.setState(function (prev) {
-                var p = prev.progress.slice();
-                p[i] = { name: file.name, status: 'done' };
-                return { progress: p };
-              });
-              return path;
-            })
-            .catch(function (err) {
-              self.setState(function (prev) {
-                var p = prev.progress.slice();
-                p[i] = { name: file.name, status: 'error', err: err.message };
-                return { progress: p };
-              });
-              throw err;
+      var collectedPaths = [];
+
+      // Recursive sequential uploader
+      function uploadNext(i) {
+        if (i >= files.length) {
+          // All done — commit new paths to the field value
+          self.props.onChange(self.getImages().concat(collectedPaths));
+          self.setState({ uploading: false });
+          setTimeout(function () { self.setState({ progress: [] }); }, 4000);
+          return;
+        }
+
+        // Mark current file as uploading
+        self.setState(function (prev) {
+          var p = prev.progress.slice();
+          p[i] = { name: files[i].name, status: 'uploading' };
+          return { progress: p };
+        });
+
+        uploadFileToGitHub(files[i], token)
+          .then(function (path) {
+            collectedPaths.push(path);
+            self.setState(function (prev) {
+              var p = prev.progress.slice();
+              p[i] = { name: files[i].name, status: 'done' };
+              return { progress: p };
             });
-        })
-      ).then(function (results) {
-        var newPaths = results
-          .filter(function (r) { return r.status === 'fulfilled'; })
-          .map(function (r) { return r.value; });
+            uploadNext(i + 1);
+          })
+          .catch(function (err) {
+            self.setState(function (prev) {
+              var p = prev.progress.slice();
+              p[i] = { name: files[i].name, status: 'error', err: err.message };
+              return { progress: p };
+            });
+            uploadNext(i + 1); // continue with remaining files even if one fails
+          });
+      }
 
-        self.props.onChange(self.getImages().concat(newPaths));
-        self.setState({ uploading: false });
-        setTimeout(function () { self.setState({ progress: [] }); }, 4000);
-      });
+      uploadNext(0);
     },
 
     removeImage: function (index) {
@@ -240,8 +253,14 @@
           },
         },
           progress.map(function (p, i) {
-            var colour = p.status === 'done' ? '#2e7d32' : p.status === 'error' ? '#b71c1c' : '#555';
-            var icon   = p.status === 'done' ? '✓' : p.status === 'error' ? '✗' : '…';
+            var colour = p.status === 'done'      ? '#2e7d32'
+                       : p.status === 'error'     ? '#b71c1c'
+                       : p.status === 'uploading' ? '#1a6bb5'
+                       : '#999';
+            var icon   = p.status === 'done'      ? '✓'
+                       : p.status === 'error'     ? '✗'
+                       : p.status === 'uploading' ? '⏳'
+                       : '·';
             return h('div', { key: i, style: { padding: '2px 0', color: colour } },
               icon + ' ' + p.name + (p.err ? ' — ' + p.err : '')
             );
