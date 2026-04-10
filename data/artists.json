@@ -25,22 +25,22 @@
     },
     {
       "shopifyEmbedCode": "",
-      "genre": "Alternative / Rock",
-      "coverImage": "",
+      "genre": "Rapper",
+      "coverImage": "assets/images/uploads/channels4_profile.jpg",
       "socials": {
-        "instagram": "",
-        "spotify": "",
+        "instagram": "https://www.instagram.com/ghaisguevaraobligatory/?hl=en",
+        "spotify": "https://open.spotify.com/artist/7zQ4NNGWgCVWU80Rg6dXOH?si=Xws03gzLSX2WdEOkNoQf0A",
         "soundcloud": "",
-        "bandcamp": "",
-        "youtube": "",
+        "bandcamp": "https://ghais.bandcamp.com/music",
+        "youtube": "https://www.youtube.com/@ghaisguevara/featured",
         "tiktok": ""
       },
-      "origin": "Cork, Ireland",
-      "bio": "Replace this with the artist biography.",
-      "name": "Artist Name",
+      "origin": "North Philadelphia, USA",
+      "bio": "Introducing: Ghais Guevara. Born and raised in North Philly amidst both guns and gang avoidance tactics, nurtured and educated using generational radical Black leftist thought, Ghais Guevara revels in the juxtapositions and narrative conflicts of his life with standout projects such as “There Will Be No Super-Slave” and “Goyard Ibn Said”. Both of which have received critical and cultural recognition from the likes of Vice, NPR, The Needle Drop and beyond for their witty and compelling lyrical navigations soundtracked by this one-man band’s beat craftmenship.",
+      "name": "Gais Guevara",
       "featured": true,
       "gallery": [],
-      "id": "artist-2",
+      "id": "gais-guevara",
       "eventIds": [
         "vol-48-london",
         "vol-47"
