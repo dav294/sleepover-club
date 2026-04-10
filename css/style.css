@@ -1,7 +1,7 @@
 /* =============================================================
    Sleepover Club — Main Stylesheet
    Stack: Syne (display) + DM Sans (body)
-   Palette: #090909 bg / #f0ece4 text / #c8a96a accent
+   Palette: #090909 bg / #f0ece4 text / #f199c1 accent (pink)
 ============================================================= */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -13,10 +13,13 @@
   --text:         #f0ece4;
   --text-muted:   rgba(240,236,228,0.48);
   --text-dim:     rgba(240,236,228,0.18);
-  --accent:       #c8a96a;
-  --accent-dim:   rgba(200,169,106,0.12);
+  --accent:       #f199c1;
+  --accent-2:     #fbb8d4;
+  --accent-deep:  #d4608a;
+  --accent-dim:   rgba(241,153,193,0.10);
   --border:       rgba(240,236,228,0.08);
   --border-hover: rgba(240,236,228,0.22);
+  --border-pink:  rgba(241,153,193,0.22);
   --font-disp:    'Syne', sans-serif;
   --font-body:    'DM Sans', sans-serif;
   --ease-out:     cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -93,7 +96,7 @@ button { cursor: pointer; font-family: inherit; }
 .video-bg-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(9,9,9,0.72);
+  background: rgba(9,9,9,0.42);
 }
 
 /* =============================================================
@@ -170,13 +173,13 @@ button { cursor: pointer; font-family: inherit; }
   display: inline-flex;
   align-items: center;
   padding: 10px 22px;
-  border: 1px solid var(--border-hover);
+  border: 1px solid var(--border-pink);
   border-radius: 2px;
   font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text);
+  color: var(--accent);
   background: transparent;
   transition: all 0.25s;
 }
@@ -184,7 +187,7 @@ button { cursor: pointer; font-family: inherit; }
 .nav-cta:hover {
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--bg);
+  color: #0d0d0d;
 }
 
 /* Hamburger */
@@ -271,20 +274,23 @@ button { cursor: pointer; font-family: inherit; }
 
 .btn-primary {
   background: var(--accent);
-  color: var(--bg);
+  color: #0d0d0d;
 }
 
-.btn-primary:hover { background: var(--text); }
+.btn-primary:hover {
+  background: var(--accent-2);
+}
 
 .btn-outline {
   background: transparent;
-  border: 1px solid var(--border-hover);
+  border: 1px solid var(--border-pink);
   color: var(--text);
 }
 
 .btn-outline:hover {
   border-color: var(--accent);
   color: var(--accent);
+  background: var(--accent-dim);
 }
 
 .btn-ghost {
@@ -373,15 +379,47 @@ button { cursor: pointer; font-family: inherit; }
   opacity: 0;
 }
 
+/* ── Custom letter-image hero title ───────────────────────── */
 .hero-title {
-  font-family: var(--font-disp);
-  font-size: clamp(4rem, 13vw, 10.5rem);
-  font-weight: 800;
-  line-height: 0.9;
-  letter-spacing: -0.03em;
-  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
   margin-bottom: 28px;
   opacity: 0;
+  line-height: 1; /* override inherited */
+}
+
+.letter-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* All letter images: screen blend makes dark areas transparent,
+   white areas glow — works on dark/video backgrounds */
+.letter-img {
+  height: clamp(4.5rem, 11vw, 9.5rem);
+  width: auto;
+  display: block;
+  mix-blend-mode: screen;
+  filter: drop-shadow(0 0 18px rgba(241,153,193,0.30));
+  transition: filter 0.3s;
+  /* tighten letter spacing */
+  margin-left: -0.02em;
+}
+
+/* Images 1.png and 2.png have white backgrounds —
+   invert so the white bg becomes black (disappears via screen),
+   and the white fill inverts to black (also disappears),
+   leaving the dark fuzzy outline visible as a bright edge */
+.letter-img--invert {
+  filter: invert(1) drop-shadow(0 0 18px rgba(241,153,193,0.30));
+}
+
+.letter-img:hover,
+.letter-img--invert:hover {
+  filter: invert(1) drop-shadow(0 0 28px rgba(241,153,193,0.65)) brightness(1.1);
 }
 
 .hero-tagline {
@@ -1770,6 +1808,7 @@ button { cursor: pointer; font-family: inherit; }
   .filter-bar { top: 56px; }
   .hero-ctas { gap: 10px; }
   .hero-ctas .btn { padding: 13px 24px; }
+  .letter-img { height: clamp(2.8rem, 9vw, 5rem); }
 }
 
 @media (max-width: 480px) {
