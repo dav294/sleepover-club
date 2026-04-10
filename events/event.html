@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en-IE">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event | Sleepover Club</title>
+  <meta name="description" content="Sleepover Club event details.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body data-page="event-detail">
+
+  <div class="video-bg">
+    <video autoplay muted loop playsinline>
+      <source src="../assets/videos/bg.mp4" type="video/mp4">
+    </video>
+    <div class="video-bg-overlay"></div>
+  </div>
+
+  <div class="grain" aria-hidden="true"></div>
+
+  <div class="nav-menu-mobile" id="mobile-menu">
+    <a href="../events/">Events</a>
+    <a href="../artists/">Artists</a>
+    <a href="../index.html#about">About</a>
+    <button class="btn btn-primary js-email-popup">Join the List</button>
+  </div>
+
+  <nav class="site-nav scrolled" id="site-nav">
+    <div class="nav-inner">
+      <a href="../index.html" class="nav-logo">
+        <img src="../brand/logos/logo.png" alt="Sleepover Club" onerror="this.style.display='none'">
+        <span class="nav-logo-wordmark">Sleepover Club</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="../events/" style="color:var(--text)">Events</a></li>
+        <li><a href="../artists/">Artists</a></li>
+        <li><a href="../index.html#about">About</a></li>
+      </ul>
+      <button class="nav-cta js-email-popup">Join the List</button>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <div id="event-detail-root">
+
+    <!-- Hero (populated by JS) -->
+    <div class="event-detail-hero">
+      <div class="event-detail-hero-bg" id="event-hero-bg"></div>
+      <div class="event-detail-hero-overlay"></div>
+      <div class="event-detail-hero-content">
+        <a href="../events/" style="font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);display:inline-block;margin-bottom:28px;transition:color 0.2s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'">← All Events</a>
+        <span class="event-detail-label" id="event-detail-label"></span>
+        <h1 class="event-detail-title" id="event-detail-title"></h1>
+        <p class="event-detail-subtitle" id="event-detail-subtitle"></p>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="event-detail-body">
+      <div class="event-detail-inner">
+
+        <!-- Main -->
+        <div class="event-detail-main">
+          <p class="event-detail-desc" id="event-desc"></p>
+
+          <!-- Gallery -->
+          <div class="event-gallery" id="event-gallery"></div>
+
+          <!-- Video -->
+          <div id="event-video"></div>
+
+          <!-- Email CTA inline -->
+          <div style="border:1px solid var(--border);border-radius:3px;padding:40px;text-align:center;margin-top:48px">
+            <p style="font-size:0.67rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:12px">Don't Miss the Next One</p>
+            <h3 style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:16px">Get Early Access to Every Event</h3>
+            <button class="btn btn-primary js-email-popup">Join the List →</button>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="event-detail-sidebar">
+          <!-- Ticket -->
+          <div class="sidebar-card">
+            <a href="#" class="btn btn-primary" id="event-ticket-btn" target="_blank" rel="noopener" style="width:100%;justify-content:center;margin-bottom:0">Get Tickets →</a>
+          </div>
+
+          <!-- Info -->
+          <div class="sidebar-card">
+            <div class="sidebar-card-title">Event Info</div>
+            <div class="sidebar-info-row">
+              <span class="sidebar-info-label">Date</span>
+              <span class="sidebar-info-value" id="sidebar-date"></span>
+            </div>
+            <div class="sidebar-info-row">
+              <span class="sidebar-info-label">Doors</span>
+              <span class="sidebar-info-value" id="sidebar-doors"></span>
+            </div>
+            <div class="sidebar-info-row">
+              <span class="sidebar-info-label">Venue</span>
+              <span class="sidebar-info-value" id="sidebar-venue"></span>
+            </div>
+            <div class="sidebar-info-row">
+              <span class="sidebar-info-label">City</span>
+              <span class="sidebar-info-value" id="sidebar-city"></span>
+            </div>
+            <div class="sidebar-info-row">
+              <span class="sidebar-info-label">Age</span>
+              <span class="sidebar-info-value" id="sidebar-age"></span>
+            </div>
+          </div>
+
+          <!-- Lineup -->
+          <div class="sidebar-card">
+            <div class="sidebar-card-title">Lineup</div>
+            <div class="sidebar-lineup" id="event-lineup">
+              <p style="font-size:0.82rem;color:var(--text-muted)">Lineup TBA</p>
+            </div>
+          </div>
+        </aside>
+
+      </div>
+    </div>
+
+  </div><!-- end #event-detail-root -->
+
+  <div class="email-popup" id="email-popup" role="dialog" aria-modal="true">
+    <div class="email-popup-overlay js-close-popup"></div>
+    <div class="email-popup-card">
+      <button class="email-popup-close js-close-popup" aria-label="Close">✕</button>
+      <p class="email-popup-eyebrow">Sleepover Club</p>
+      <h2 class="email-popup-title">Get Early Access to Every Event</h2>
+      <p class="email-popup-sub">Be the first to know about upcoming shows and presale tickets.</p>
+      <form class="email-form" id="popup-email-form">
+        <input type="email" placeholder="Your email address" required>
+        <button type="submit">Join →</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+  <script src="../data/events.js"></script>
+  <script src="../data/artists.js"></script>
+  <script src="../js/app.js"></script>
+
+</body>
+</html>

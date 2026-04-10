@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en-IE">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sleepover Club | Independent Music Events — Dublin, Ireland</title>
+  <meta name="description" content="Sleepover Club is an independent music promoter based in Dublin, Ireland. Curating unforgettable live music experiences since 2018 — 50+ events, 120+ artists across Dublin, London, Belfast and Galway.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="home">
+
+  <!-- ═══ VIDEO BACKGROUND ══════════════════════════════════════ -->
+  <div class="video-bg">
+    <!-- Drop your background video file into assets/videos/ and name it bg.mp4 -->
+    <video autoplay muted loop playsinline>
+      <source src="assets/videos/bg.mp4" type="video/mp4">
+    </video>
+    <div class="video-bg-overlay"></div>
+  </div>
+
+  <!-- ═══ GRAIN ════════════════════════════════════════════════ -->
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- ═══ MOBILE NAV MENU ══════════════════════════════════════ -->
+  <div class="nav-menu-mobile" id="mobile-menu">
+    <a href="events/">Events</a>
+    <a href="artists/">Artists</a>
+    <a href="#about">About</a>
+    <button class="btn btn-primary js-email-popup">Join the List</button>
+  </div>
+
+  <!-- ═══ NAV ══════════════════════════════════════════════════ -->
+  <nav class="site-nav" id="site-nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <!-- Replace src with your logo file once uploaded to brand/logos/ -->
+        <img src="brand/logos/logo.png" alt="Sleepover Club" onerror="this.style.display='none'">
+        <span class="nav-logo-wordmark">Sleepover Club</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="events/">Events</a></li>
+        <li><a href="artists/">Artists</a></li>
+        <li><a href="#about">About</a></li>
+      </ul>
+      <button class="nav-cta js-email-popup">Join the List</button>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ═══ HERO ══════════════════════════════════════════════════ -->
+  <section class="hero">
+    <div class="hero-inner">
+      <p class="hero-eyebrow">Est. 2018 · Dublin, Ireland</p>
+      <h1 class="hero-title">Sleepover<br>Club</h1>
+      <p class="hero-tagline">Independent live music experiences across Ireland and the UK since 2018.</p>
+      <div class="hero-ctas">
+        <a href="events/" class="btn btn-primary">See Events</a>
+        <button class="btn btn-outline js-email-popup">Get Early Access</button>
+      </div>
+    </div>
+    <div class="hero-scroll" aria-hidden="true">
+      <span>Scroll</span>
+      <div class="hero-scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- ═══ UPCOMING EVENTS ══════════════════════════════════════ -->
+  <section class="upcoming-section" id="upcoming-section">
+    <div class="upcoming-inner">
+      <div class="section-header reveal">
+        <div class="section-header-left">
+          <span class="section-eyebrow">What's On</span>
+          <h2 class="section-title">Upcoming Events</h2>
+        </div>
+        <a href="events/?filter=upcoming" class="section-link">All Events →</a>
+      </div>
+      <div id="upcoming-content"></div>
+    </div>
+  </section>
+
+  <!-- ═══ PAST EVENTS ══════════════════════════════════════════ -->
+  <section class="past-events-section" id="past-events">
+    <div class="past-events-inner">
+      <div class="section-header reveal">
+        <div class="section-header-left">
+          <span class="section-eyebrow">Archive</span>
+          <h2 class="section-title">Past Events</h2>
+        </div>
+        <a href="events/?filter=past" class="section-link">Full Archive →</a>
+      </div>
+      <div class="events-grid" id="past-events-grid"></div>
+    </div>
+  </section>
+
+  <!-- ═══ ARTISTS ═══════════════════════════════════════════════ -->
+  <section class="artists-section">
+    <div class="artists-section-inner">
+      <div class="section-header reveal">
+        <div class="section-header-left">
+          <span class="section-eyebrow">The Lineup</span>
+          <h2 class="section-title">Artists</h2>
+        </div>
+        <a href="artists/" class="section-link">All Artists →</a>
+      </div>
+    </div>
+    <div class="artists-ticker-wrap">
+      <div class="artists-ticker-track" id="artists-ticker"></div>
+    </div>
+  </section>
+
+  <!-- ═══ ABOUT ══════════════════════════════════════════════════ -->
+  <section class="about-section" id="about">
+    <div class="about-inner">
+      <div class="about-stats reveal-stagger">
+        <div class="stat-block">
+          <div class="stat-block-num"><span class="stat-count" data-target="50" data-suffix="+">50+</span></div>
+          <div class="stat-block-label">Events hosted since 2018</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-block-num"><span class="stat-count" data-target="120" data-suffix="+">120+</span></div>
+          <div class="stat-block-label">Artists featured</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-block-num"><span class="stat-count" data-target="4" data-suffix="">4</span></div>
+          <div class="stat-block-label">Cities — Dublin, London,<br>Belfast & Galway</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-block-num"><span class="stat-count" data-target="6" data-suffix="+">6+</span></div>
+          <div class="stat-block-label">Years of live music</div>
+        </div>
+      </div>
+      <div class="about-text reveal">
+        <span class="section-eyebrow">Who We Are</span>
+        <p class="about-body">Sleepover Club is an independent music promoter based in Ireland and the UK, curating unforgettable live music experiences since 2018. With a passion for supporting both emerging and established talent, we've hosted 50 events across Dublin, London, Belfast, and Galway, featuring over 120 acts from Ireland, the UK and beyond.</p>
+        <p class="about-body">From intimate gigs to sold-out events, we bring together music lovers and creatives to celebrate the vibrant music scenes. Stay tuned for more incredible nights of live performances, artistic collaborations, and unforgettable moments.</p>
+        <button class="btn btn-outline js-email-popup">Get Early Access to Events →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ EMAIL CTA ════════════════════════════════════════════ -->
+  <section class="email-cta-section">
+    <div class="email-cta-inner reveal">
+      <h2 class="email-cta-title">Never Miss<br>a Night.</h2>
+      <p class="email-cta-sub">Get early access to every Sleepover Club event before tickets go on sale — straight to your inbox, no noise.</p>
+      <form class="email-form" id="home-email-form">
+        <input type="email" placeholder="Your email address" required>
+        <button type="submit">Join the List →</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ═══ FOOTER ════════════════════════════════════════════════ -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <span class="footer-logo-wordmark">Sleepover Club</span>
+          <p class="footer-tagline">Independent live music experiences since 2018. Dublin · London · Belfast · Galway.</p>
+          <div class="footer-socials">
+            <a href="https://www.instagram.com/sleepoverclubofficial/" target="_blank" rel="noopener" class="footer-social">IG</a>
+            <a href="#" class="footer-social">TK</a>
+            <a href="#" class="footer-social">SP</a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col-title">Events</div>
+          <a href="events/?filter=upcoming">Upcoming Events</a>
+          <a href="events/?filter=past">Past Events</a>
+          <a href="artists/">Artists</a>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col-title">Connect</div>
+          <a href="https://www.instagram.com/sleepoverclubofficial/" target="_blank" rel="noopener">Instagram</a>
+          <a href="#" class="js-email-popup">Join the Mailing List</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p class="footer-copy">© 2025 Sleepover Club. All rights reserved.</p>
+        <p class="footer-copy">Dublin, Ireland</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══ EMAIL POPUP ══════════════════════════════════════════ -->
+  <div class="email-popup" id="email-popup" role="dialog" aria-modal="true">
+    <div class="email-popup-overlay js-close-popup"></div>
+    <div class="email-popup-card">
+      <button class="email-popup-close js-close-popup" aria-label="Close">✕</button>
+      <p class="email-popup-eyebrow">Sleepover Club</p>
+      <h2 class="email-popup-title">Get Early Access to Every Event</h2>
+      <p class="email-popup-sub">Be the first to know about upcoming shows, presale tickets, and exclusive Sleepover Club moments.</p>
+      <form class="email-form" id="popup-email-form">
+        <input type="email" placeholder="Your email address" required>
+        <button type="submit">Join →</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══ SCRIPTS ══════════════════════════════════════════════ -->
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+  <script src="data/events.js"></script>
+  <script src="data/artists.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
