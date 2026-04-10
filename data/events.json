@@ -116,7 +116,9 @@
         "assets/images/uploads/1775821215764-walshy-party-6.jpg",
         "assets/images/uploads/1775821215793-walshy-party-1.jpg",
         "assets/images/uploads/1775821227834-walshy-party-8.jpg",
-        "assets/images/uploads/1775821227887-walshy-party-1.jpg"
+        "assets/images/uploads/1775821227887-walshy-party-1.jpg",
+        "assets/images/uploads/1775821285711-walshy-party-13.jpg",
+        "assets/images/uploads/1775821285731-walshy-party-12.jpg"
       ],
       "status": "past",
       "address": "",
@@ -157,33 +159,6 @@
       ],
       "soldOut": true,
       "id": "claudia-isaki",
-      "videoEmbed": ""
-    },
-    {
-      "fullDesc": "A massive night at The Limelight in Belfast. Sleepover Club brings its signature energy North, with a lineup that bridged Ireland's thriving indie scenes.",
-      "coverImage": "",
-      "ticketLink": "",
-      "endTime": "02:00",
-      "city": "Belfast",
-      "shortDesc": "A massive night at The Limelight — Sleepover Club brings the party to Belfast.",
-      "poster": "",
-      "ageRestriction": "18+",
-      "date": "2024-08-17",
-      "venue": "The Limelight",
-      "artistIds": [],
-      "doorsTime": "20:00",
-      "gallery": [],
-      "status": "past",
-      "address": "17 Ormeau Ave, Belfast",
-      "country": "Ireland",
-      "subtitle": "Belfast Edition",
-      "title": "Sleepover Club Vol. 45",
-      "tags": [
-        "Belfast",
-        "Live Music"
-      ],
-      "soldOut": false,
-      "id": "vol-45-belfast",
       "videoEmbed": ""
     }
   ]
