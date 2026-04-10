@@ -95,22 +95,22 @@
     },
     {
       "shopifyEmbedCode": "",
-      "genre": "Post-Punk / Indie",
-      "coverImage": "",
+      "genre": "Rapper",
+      "coverImage": "assets/images/uploads/halfpipe-profile.jpg",
       "socials": {
-        "instagram": "",
-        "spotify": "",
-        "soundcloud": "",
+        "instagram": "https://www.instagram.com/halfpipe__/?hl=en",
+        "spotify": "https://open.spotify.com/artist/6Keq2jwJYu2E6TZaWOWm1X?si=WlP4pHciQXOIXu-nFP30bQ",
+        "soundcloud": "https://tr.ee/XhghwpsoVO",
         "bandcamp": "",
         "youtube": "",
         "tiktok": ""
       },
-      "origin": "Belfast, Ireland",
+      "origin": "Leicester, UK",
       "bio": "Replace this with the artist biography.",
-      "name": "Artist Name",
+      "name": "Halfpipe",
       "featured": false,
       "gallery": [],
-      "id": "artist-5",
+      "id": "halfpipe",
       "eventIds": [
         "vol-45-belfast"
       ],
