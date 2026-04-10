@@ -77,11 +77,14 @@
         <div class="event-detail-main">
           <p class="event-detail-desc" id="event-desc"></p>
 
-          <!-- Gallery -->
-          <div class="event-gallery" id="event-gallery"></div>
-
-          <!-- Video -->
+          <!-- Video (shown before gallery when present) -->
           <div id="event-video"></div>
+
+          <!-- Gallery -->
+          <div id="event-gallery-wrap" style="display:none">
+            <h3 class="subsection-title">Photos</h3>
+            <div class="event-gallery" id="event-gallery"></div>
+          </div>
 
           <!-- Email CTA inline -->
           <div style="border:1px solid var(--border);border-radius:3px;padding:40px;text-align:center;margin-top:48px">
@@ -93,6 +96,11 @@
 
         <!-- Sidebar -->
         <aside class="event-detail-sidebar">
+          <!-- Poster -->
+          <div class="sidebar-poster" id="sidebar-poster" style="display:none">
+            <img id="sidebar-poster-img" alt="Event Poster" loading="lazy">
+          </div>
+
           <!-- Ticket -->
           <div class="sidebar-card">
             <a href="#" class="btn btn-primary" id="event-ticket-btn" target="_blank" rel="noopener" style="width:100%;justify-content:center;margin-bottom:0">Get Tickets →</a>

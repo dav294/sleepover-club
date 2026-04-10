@@ -361,24 +361,37 @@ function initEventDetail() {
   // Description
   document.getElementById('event-desc').textContent = event.fullDesc || event.shortDesc;
 
-  // Gallery
-  const galleryEl = document.getElementById('event-gallery');
-  if (galleryEl) {
-    if (event.gallery && event.gallery.length) {
-      galleryEl.innerHTML = event.gallery.map(img =>
-        `<div class="event-gallery-item"><img src="../${img}" alt="${event.title}" loading="lazy"></div>`
-      ).join('');
-    } else {
-      galleryEl.style.display = 'none';
-    }
-  }
-
-  // Video
+  // Video (prominent, before gallery)
   const videoEl = document.getElementById('event-video');
   if (videoEl) {
     if (event.videoEmbed) {
-      videoEl.innerHTML = `<div class="event-video-wrap"><iframe src="${event.videoEmbed}" allowfullscreen></iframe></div>`;
+      videoEl.innerHTML = `
+        <div class="event-video-section">
+          <span class="subsection-title">Watch</span>
+          <div class="event-video-wrap"><iframe src="${event.videoEmbed}" allowfullscreen allow="autoplay; encrypted-media"></iframe></div>
+        </div>`;
     }
+  }
+
+  // Gallery — collage layout
+  const galleryWrap = document.getElementById('event-gallery-wrap');
+  const galleryEl   = document.getElementById('event-gallery');
+  if (galleryEl && event.gallery && event.gallery.length) {
+    galleryEl.innerHTML = event.gallery.map((img, i) =>
+      `<div class="event-gallery-item event-gallery-item--${i + 1}">
+        <img src="../${img}" alt="${event.title} photo ${i + 1}" loading="lazy">
+      </div>`
+    ).join('');
+    if (galleryWrap) galleryWrap.style.display = 'block';
+  }
+
+  // Poster
+  const posterWrap = document.getElementById('sidebar-poster');
+  const posterImg  = document.getElementById('sidebar-poster-img');
+  if (posterWrap && posterImg && event.poster) {
+    posterImg.src = `../${event.poster}`;
+    posterImg.alt = `${event.title} poster`;
+    posterWrap.style.display = 'block';
   }
 
   // Sidebar info

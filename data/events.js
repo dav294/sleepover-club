@@ -1,7 +1,9 @@
 // data/events.js — Sleepover Club Events
 // Add new events here. 'status' must be 'upcoming' or 'past'.
-// coverImage paths are relative to the project root (assets/images/events/).
-// Gallery images listed in the 'gallery' array.
+// coverImage  — used as the hero background (landscape/square crop works best)
+// poster      — A4 portrait promotional poster, shown in sidebar (optional)
+// gallery     — array of photo paths, displayed in collage layout
+// videoEmbed  — paste the YouTube/Vimeo embed src URL (optional)
 
 const EVENTS = [
   {
@@ -17,8 +19,9 @@ const EVENTS = [
     country: 'Ireland',
     status: 'upcoming',
     coverImage: 'assets/images/events/vol-50.jpg',
-    gallery: [],
-    videoEmbed: null, // paste YouTube/Vimeo iframe src here
+    poster: null,     // e.g. 'assets/images/events/vol-50-poster.jpg'
+    gallery: [],      // e.g. ['assets/images/events/vol-50-1.jpg', ...]
+    videoEmbed: null, // paste YouTube/Vimeo embed src here
     artistIds: [],    // reference artist IDs from artists.js
     shortDesc: 'Fifty nights and counting. Join us to celebrate six years of Sleepover Club with a handpicked lineup of our favourite artists.',
     fullDesc: 'Fifty nights and counting. Join us for a very special evening celebrating six years of Sleepover Club — 50 events, 120+ artists, and countless unforgettable nights across Ireland and the UK. Expect a handpicked lineup of some of our all-time favourite acts alongside a few surprises. This one is for the community that made it all possible.',
