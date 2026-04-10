@@ -49,22 +49,22 @@
     },
     {
       "shopifyEmbedCode": "",
-      "genre": "Electronic / Ambient",
-      "coverImage": "",
+      "genre": "Indie / Folk",
+      "coverImage": "assets/images/uploads/pippa-molony.webp",
       "socials": {
-        "instagram": "",
-        "spotify": "",
+        "instagram": "https://www.instagram.com/pippala/?hl=en",
+        "spotify": "https://open.spotify.com/artist/21DDxi3yKgaQh0B3MpRT5a?si=uGcDmXddTPG_Ccrn0FfFNQ",
         "soundcloud": "",
         "bandcamp": "",
-        "youtube": "",
+        "youtube": "https://www.youtube.com/@pippamolony2566",
         "tiktok": ""
       },
-      "origin": "London, UK",
+      "origin": "Dublin, Ireland",
       "bio": "Replace this with the artist biography.",
-      "name": "Artist Name",
+      "name": "Pippa Molony",
       "featured": true,
       "gallery": [],
-      "id": "artist-3",
+      "id": "pippa-molony",
       "eventIds": [
         "vol-48-london"
       ],
