@@ -72,22 +72,22 @@
     },
     {
       "shopifyEmbedCode": "",
-      "genre": "Singer-Songwriter",
-      "coverImage": "",
+      "genre": "Rapper",
+      "coverImage": "assets/images/uploads/namebliss-poster.jpg",
       "socials": {
-        "instagram": "",
-        "spotify": "",
+        "instagram": "https://www.instagram.com/namesbliss/?hl=en",
+        "spotify": "https://open.spotify.com/artist/69NBSJxkHyagyCv9K902iM?si=PIZWQydlRwGKTw5TpQnOQg",
         "soundcloud": "",
         "bandcamp": "",
         "youtube": "",
         "tiktok": ""
       },
-      "origin": "Galway, Ireland",
+      "origin": "London, UK",
       "bio": "Replace this with the artist biography.",
-      "name": "Artist Name",
+      "name": "Namebliss",
       "featured": true,
       "gallery": [],
-      "id": "artist-4",
+      "id": "namebliss",
       "eventIds": [
         "vol-46-galway"
       ],
