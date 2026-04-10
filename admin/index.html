@@ -7,10 +7,234 @@
   <meta name="robots" content="noindex, nofollow">
 </head>
 <body>
-  <!-- Prevent auto-init so we can supply config directly (no config.yml needed) -->
   <script>window.CMS_MANUAL_INIT = true;</script>
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
   <script>
+  /* =============================================================
+     MULTI-IMAGE CUSTOM WIDGET
+     - Click or drag & drop to select many images at once
+     - Uploads directly to GitHub repo via API
+     - Stores paths as a plain string array in JSON
+  ============================================================= */
+
+  function getCMSToken() {
+    try {
+      var raw = localStorage.getItem('netlify-cms-user') || '{}';
+      return JSON.parse(raw).token || null;
+    } catch (e) { return null; }
+  }
+
+  function uploadFileToGitHub(file, token) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = function (e) {
+        var base64   = e.target.result.split(',')[1];
+        var safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-').toLowerCase();
+        var path     = 'assets/images/uploads/' + Date.now() + '-' + safeName;
+
+        fetch('https://api.github.com/repos/dav294/sleepover-club/contents/' + path, {
+          method: 'PUT',
+          headers: {
+            Authorization: 'token ' + token,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: 'Upload media: ' + file.name,
+            content: base64,
+          }),
+        })
+          .then(function (res) {
+            if (!res.ok) throw new Error('GitHub API ' + res.status);
+            resolve(path);
+          })
+          .catch(reject);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  /* ── React class component (createClass + h exposed by Decap CMS) ── */
+  var MultiImageWidget = createClass({
+
+    getInitialState: function () {
+      return { uploading: false, progress: [] };
+    },
+
+    getImages: function () {
+      var v = this.props.value;
+      if (!v) return [];
+      if (Array.isArray(v)) return v;
+      if (typeof v.toJS === 'function') return v.toJS();
+      return [];
+    },
+
+    handleFiles: function (fileList) {
+      var self   = this;
+      var token  = getCMSToken();
+      if (!token) {
+        alert('Not authenticated — please log in to the CMS first, then try again.');
+        return;
+      }
+
+      var files = Array.from(fileList).filter(function (f) { return f.type.startsWith('image/'); });
+      if (!files.length) return;
+
+      self.setState({
+        uploading: true,
+        progress: files.map(function (f) { return { name: f.name, status: 'uploading' }; }),
+      });
+
+      Promise.allSettled(
+        files.map(function (file, i) {
+          return uploadFileToGitHub(file, token)
+            .then(function (path) {
+              self.setState(function (prev) {
+                var p = prev.progress.slice();
+                p[i] = { name: file.name, status: 'done' };
+                return { progress: p };
+              });
+              return path;
+            })
+            .catch(function (err) {
+              self.setState(function (prev) {
+                var p = prev.progress.slice();
+                p[i] = { name: file.name, status: 'error', err: err.message };
+                return { progress: p };
+              });
+              throw err;
+            });
+        })
+      ).then(function (results) {
+        var newPaths = results
+          .filter(function (r) { return r.status === 'fulfilled'; })
+          .map(function (r) { return r.value; });
+
+        self.props.onChange(self.getImages().concat(newPaths));
+        self.setState({ uploading: false });
+        setTimeout(function () { self.setState({ progress: [] }); }, 4000);
+      });
+    },
+
+    removeImage: function (index) {
+      var imgs = this.getImages();
+      this.props.onChange(imgs.filter(function (_, i) { return i !== index; }));
+    },
+
+    render: function () {
+      var self      = this;
+      var uploading = this.state.uploading;
+      var progress  = this.state.progress;
+      var images    = this.getImages();
+      var inputId   = 'multi-img-' + this.props.forID;
+
+      return h('div', { id: this.props.forID },
+
+        /* ── Drop zone ── */
+        h('label', {
+          htmlFor: inputId,
+          style: {
+            display: 'block',
+            border: '2px dashed #bbb',
+            borderRadius: '8px',
+            padding: '32px 24px',
+            textAlign: 'center',
+            cursor: uploading ? 'not-allowed' : 'pointer',
+            background: uploading ? '#f5f5f5' : '#fafafa',
+            marginBottom: '14px',
+            transition: 'background 0.15s',
+          },
+          onDragOver: function (e) { e.preventDefault(); },
+          onDrop: function (e) {
+            e.preventDefault();
+            if (!uploading) self.handleFiles(e.dataTransfer.files);
+          },
+        },
+          h('input', {
+            id: inputId,
+            type: 'file',
+            multiple: true,
+            accept: 'image/*',
+            style: { display: 'none' },
+            disabled: uploading,
+            onChange: function (e) { self.handleFiles(e.target.files); },
+          }),
+          uploading
+            ? h('p', { style: { margin: 0, color: '#555', fontSize: '14px' } }, '⏳ Uploading images to GitHub…')
+            : h('div', null,
+                h('p', { style: { margin: '0 0 6px', fontWeight: 700, fontSize: '14px', color: '#333' } },
+                  '📁 Click to select images'),
+                h('p', { style: { margin: 0, color: '#888', fontSize: '12px' } },
+                  'Hold Ctrl / Cmd to select multiple at once · Drag & drop also works')
+              )
+        ),
+
+        /* ── Upload progress list ── */
+        progress.length > 0 && h('div', {
+          style: {
+            marginBottom: '14px', padding: '10px 14px',
+            background: '#f4f4f4', borderRadius: '6px', fontSize: '13px',
+          },
+        },
+          progress.map(function (p, i) {
+            var colour = p.status === 'done' ? '#2e7d32' : p.status === 'error' ? '#b71c1c' : '#555';
+            var icon   = p.status === 'done' ? '✓' : p.status === 'error' ? '✗' : '…';
+            return h('div', { key: i, style: { padding: '2px 0', color: colour } },
+              icon + ' ' + p.name + (p.err ? ' — ' + p.err : '')
+            );
+          })
+        ),
+
+        /* ── Thumbnail grid ── */
+        images.length > 0 && h('div', {
+          style: {
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))',
+            gap: '8px',
+          },
+        },
+          images.map(function (src, i) {
+            return h('div', {
+              key: src + i,
+              style: {
+                position: 'relative', aspectRatio: '1',
+                borderRadius: '4px', overflow: 'hidden', background: '#ddd',
+              },
+            },
+              h('img', {
+                src: '/' + src, alt: '',
+                style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' },
+              }),
+              h('button', {
+                type: 'button',
+                title: 'Remove',
+                style: {
+                  position: 'absolute', top: '4px', right: '4px',
+                  width: '22px', height: '22px', borderRadius: '50%',
+                  background: 'rgba(0,0,0,0.65)', color: '#fff',
+                  border: 'none', cursor: 'pointer', fontSize: '14px',
+                  lineHeight: '22px', textAlign: 'center', padding: 0,
+                },
+                onClick: function () { self.removeImage(i); },
+              }, '×')
+            );
+          })
+        ),
+
+        /* ── Empty state ── */
+        images.length === 0 && progress.length === 0 && h('p', {
+          style: { color: '#aaa', fontSize: '12px', margin: '4px 0 0' },
+        }, 'No photos added yet.')
+      );
+    },
+  });
+
+  /* Register the widget so it can be used in the config below */
+  CMS.registerWidget('multi-image', MultiImageWidget);
+
+  /* =============================================================
+     CMS INITIALISATION
+  ============================================================= */
   CMS.init({
     config: {
       backend: {
@@ -21,273 +245,85 @@
         auth_endpoint: 'api/auth',
       },
 
-      media_folder: 'assets/images/uploads',
+      media_folder:  'assets/images/uploads',
       public_folder: 'assets/images/uploads',
-      site_url: 'https://sleepover-club.vercel.app',
+      site_url:      'https://sleepover-club.vercel.app',
 
       collections: [
 
         // ── EVENTS ────────────────────────────────────────────────
         {
-          name: 'events',
-          label: 'Events',
-          files: [
-            {
-              name: 'all_events',
-              label: 'All Events',
-              file: 'data/events.json',
-              description: 'Add, edit, and reorder all Sleepover Club events here.',
+          name: 'events', label: 'Events',
+          files: [{
+            name: 'all_events', label: 'All Events',
+            file: 'data/events.json',
+            description: 'Add, edit, and reorder all Sleepover Club events here.',
+            fields: [{
+              label: 'Events', name: 'items', widget: 'list',
+              summary: '{{fields.title}} — {{fields.date}}',
               fields: [
-                {
-                  label: 'Events',
-                  name: 'items',
-                  widget: 'list',
-                  summary: '{{fields.title}} — {{fields.date}}',
-                  fields: [
-                    {
-                      label: 'ID (unique slug)',
-                      name: 'id',
-                      widget: 'string',
-                      hint: 'Lowercase, no spaces — used in the URL. e.g. vol-50, vol-48-london',
-                    },
-                    { label: 'Title', name: 'title', widget: 'string' },
-                    {
-                      label: 'Subtitle',
-                      name: 'subtitle',
-                      widget: 'string',
-                      required: false,
-                      hint: 'Optional subtitle shown under the main title',
-                    },
-                    {
-                      label: 'Status',
-                      name: 'status',
-                      widget: 'select',
-                      options: [
-                        { label: 'Upcoming', value: 'upcoming' },
-                        { label: 'Past',     value: 'past' },
-                      ],
-                      default: 'past',
-                    },
-                    {
-                      label: 'Date',
-                      name: 'date',
-                      widget: 'datetime',
-                      format: 'YYYY-MM-DD',
-                      date_format: 'DD MMMM YYYY',
-                      time_format: false,
-                    },
-                    {
-                      label: 'Doors Time',
-                      name: 'doorsTime',
-                      widget: 'string',
-                      hint: 'e.g. 20:00',
-                    },
-                    {
-                      label: 'End Time',
-                      name: 'endTime',
-                      widget: 'string',
-                      required: false,
-                      hint: 'e.g. 02:00 (optional)',
-                    },
-                    { label: 'Venue',   name: 'venue',   widget: 'string' },
-                    { label: 'Address', name: 'address', widget: 'string', required: false },
-                    {
-                      label: 'City',
-                      name: 'city',
-                      widget: 'string',
-                      hint: 'e.g. Dublin, London, Belfast, Galway',
-                    },
-                    { label: 'Country', name: 'country', widget: 'string', default: 'Ireland' },
-                    {
-                      label: 'Age Restriction',
-                      name: 'ageRestriction',
-                      widget: 'string',
-                      default: '18+',
-                    },
-                    {
-                      label: 'Cover Image',
-                      name: 'coverImage',
-                      widget: 'image',
-                      required: false,
-                      hint: 'Landscape or square — used as the hero background on the event page',
-                    },
-                    {
-                      label: 'Poster (A4)',
-                      name: 'poster',
-                      widget: 'image',
-                      required: false,
-                      hint: 'Portrait promotional poster — shown in the sidebar on the event page',
-                    },
-                    {
-                      label: 'Gallery Photos',
-                      name: 'gallery',
-                      widget: 'list',
-                      required: false,
-                      hint: 'Upload event photos — displayed in the collage gallery on the event page',
-                      field: { label: 'Photo', name: 'photo', widget: 'image' },
-                    },
-                    {
-                      label: 'Video Embed URL',
-                      name: 'videoEmbed',
-                      widget: 'string',
-                      required: false,
-                      hint: 'YouTube or Vimeo embed src URL — e.g. https://www.youtube.com/embed/VIDEO_ID',
-                    },
-                    {
-                      label: 'Short Description',
-                      name: 'shortDesc',
-                      widget: 'text',
-                      hint: '1–2 sentences used on event cards',
-                    },
-                    {
-                      label: 'Full Description',
-                      name: 'fullDesc',
-                      widget: 'text',
-                      hint: 'Full description shown on the event detail page',
-                    },
-                    {
-                      label: 'Ticket Link',
-                      name: 'ticketLink',
-                      widget: 'string',
-                      required: false,
-                      hint: 'Full URL to the ticket purchase page',
-                    },
-                    {
-                      label: 'Sold Out',
-                      name: 'soldOut',
-                      widget: 'boolean',
-                      default: false,
-                    },
-                    {
-                      label: 'Tags',
-                      name: 'tags',
-                      widget: 'list',
-                      required: false,
-                      hint: 'e.g. Dublin, Sold Out, Live Music',
-                      field: { label: 'Tag', name: 'tag', widget: 'string' },
-                    },
-                    {
-                      label: 'Artist IDs',
-                      name: 'artistIds',
-                      widget: 'list',
-                      required: false,
-                      hint: 'Reference the ID field of each artist performing at this event',
-                      field: { label: 'Artist ID', name: 'artistId', widget: 'string' },
-                    },
-                  ],
-                },
+                { label: 'ID (unique slug)',   name: 'id',             widget: 'string',   hint: 'Lowercase, no spaces. e.g. vol-50, vol-48-london' },
+                { label: 'Title',              name: 'title',          widget: 'string' },
+                { label: 'Subtitle',           name: 'subtitle',       widget: 'string',   required: false },
+                { label: 'Status',             name: 'status',         widget: 'select',   options: [{ label: 'Upcoming', value: 'upcoming' }, { label: 'Past', value: 'past' }], default: 'past' },
+                { label: 'Date',               name: 'date',           widget: 'datetime', format: 'YYYY-MM-DD', date_format: 'DD MMMM YYYY', time_format: false },
+                { label: 'Doors Time',         name: 'doorsTime',      widget: 'string',   hint: 'e.g. 20:00' },
+                { label: 'End Time',           name: 'endTime',        widget: 'string',   required: false },
+                { label: 'Venue',              name: 'venue',          widget: 'string' },
+                { label: 'Address',            name: 'address',        widget: 'string',   required: false },
+                { label: 'City',               name: 'city',           widget: 'string',   hint: 'e.g. Dublin, London, Belfast, Galway' },
+                { label: 'Country',            name: 'country',        widget: 'string',   default: 'Ireland' },
+                { label: 'Age Restriction',    name: 'ageRestriction', widget: 'string',   default: '18+' },
+                { label: 'Cover Image',        name: 'coverImage',     widget: 'image',    required: false, hint: 'Landscape or square — used as the hero background' },
+                { label: 'Poster (A4)',        name: 'poster',         widget: 'image',    required: false, hint: 'Portrait promotional poster — shown in the sidebar' },
+                { label: 'Gallery Photos',     name: 'gallery',        widget: 'multi-image', required: false },
+                { label: 'Video Embed URL',    name: 'videoEmbed',     widget: 'string',   required: false, hint: 'YouTube or Vimeo embed src — e.g. https://www.youtube.com/embed/VIDEO_ID' },
+                { label: 'Short Description',  name: 'shortDesc',      widget: 'text',     hint: '1–2 sentences used on event cards' },
+                { label: 'Full Description',   name: 'fullDesc',       widget: 'text' },
+                { label: 'Ticket Link',        name: 'ticketLink',     widget: 'string',   required: false },
+                { label: 'Sold Out',           name: 'soldOut',        widget: 'boolean',  default: false },
+                { label: 'Tags',               name: 'tags',           widget: 'list',     required: false, field: { label: 'Tag', name: 'tag', widget: 'string' } },
+                { label: 'Artist IDs',         name: 'artistIds',      widget: 'list',     required: false, field: { label: 'Artist ID', name: 'artistId', widget: 'string' } },
               ],
-            },
-          ],
+            }],
+          }],
         },
 
         // ── ARTISTS ───────────────────────────────────────────────
         {
-          name: 'artists',
-          label: 'Artists',
-          files: [
-            {
-              name: 'all_artists',
-              label: 'All Artists',
-              file: 'data/artists.json',
-              description: 'Add, edit, and manage all artists here.',
+          name: 'artists', label: 'Artists',
+          files: [{
+            name: 'all_artists', label: 'All Artists',
+            file: 'data/artists.json',
+            description: 'Add, edit, and manage all artists here.',
+            fields: [{
+              label: 'Artists', name: 'items', widget: 'list',
+              summary: '{{fields.name}} — {{fields.genre}}',
               fields: [
-                {
-                  label: 'Artists',
-                  name: 'items',
-                  widget: 'list',
-                  summary: '{{fields.name}} — {{fields.genre}}',
+                { label: 'ID (unique slug)',       name: 'id',              widget: 'string',      hint: 'Lowercase, no spaces. e.g. girl-band, john-doe' },
+                { label: 'Name',                   name: 'name',            widget: 'string' },
+                { label: 'Genre',                  name: 'genre',           widget: 'string',      hint: 'e.g. Indie / Folk, Electronic' },
+                { label: 'Origin',                 name: 'origin',          widget: 'string',      hint: 'e.g. Dublin, Ireland' },
+                { label: 'Biography',              name: 'bio',             widget: 'text' },
+                { label: 'Featured on Homepage',   name: 'featured',        widget: 'boolean',     default: true, hint: 'Shows artist in the scrolling ticker on the homepage' },
+                { label: 'Cover Image',            name: 'coverImage',      widget: 'image',       required: false },
+                { label: 'Gallery Photos',         name: 'gallery',         widget: 'multi-image', required: false },
+                { label: 'Video Embed URL',        name: 'videoEmbed',      widget: 'string',      required: false, hint: 'YouTube or Vimeo embed src URL' },
+                { label: 'Social Links',           name: 'socials',         widget: 'object',
                   fields: [
-                    {
-                      label: 'ID (unique slug)',
-                      name: 'id',
-                      widget: 'string',
-                      hint: 'Lowercase, no spaces — used in the URL. e.g. girl-band, john-doe',
-                    },
-                    { label: 'Name',   name: 'name',   widget: 'string' },
-                    {
-                      label: 'Genre',
-                      name: 'genre',
-                      widget: 'string',
-                      hint: 'e.g. Indie / Folk, Electronic, Singer-Songwriter',
-                    },
-                    {
-                      label: 'Origin',
-                      name: 'origin',
-                      widget: 'string',
-                      hint: 'e.g. Dublin, Ireland',
-                    },
-                    {
-                      label: 'Biography',
-                      name: 'bio',
-                      widget: 'text',
-                      hint: 'Artist biography shown on their profile page',
-                    },
-                    {
-                      label: 'Featured on Homepage',
-                      name: 'featured',
-                      widget: 'boolean',
-                      default: true,
-                      hint: 'Shows the artist in the scrolling ticker on the homepage',
-                    },
-                    {
-                      label: 'Cover Image',
-                      name: 'coverImage',
-                      widget: 'image',
-                      required: false,
-                      hint: 'Main artist photo — shown on the artist card and detail page',
-                    },
-                    {
-                      label: 'Gallery Photos',
-                      name: 'gallery',
-                      widget: 'list',
-                      required: false,
-                      hint: 'Additional artist photos',
-                      field: { label: 'Photo', name: 'photo', widget: 'image' },
-                    },
-                    {
-                      label: 'Video Embed URL',
-                      name: 'videoEmbed',
-                      widget: 'string',
-                      required: false,
-                      hint: 'YouTube or Vimeo embed src URL',
-                    },
-                    {
-                      label: 'Social Links',
-                      name: 'socials',
-                      widget: 'object',
-                      fields: [
-                        {
-                          label: 'Instagram URL', name: 'instagram', widget: 'string',
-                          required: false, hint: 'e.g. https://instagram.com/artistname',
-                        },
-                        { label: 'Spotify URL',   name: 'spotify',   widget: 'string', required: false },
-                        { label: 'SoundCloud URL', name: 'soundcloud', widget: 'string', required: false },
-                        { label: 'Bandcamp URL',  name: 'bandcamp',  widget: 'string', required: false },
-                        { label: 'YouTube URL',   name: 'youtube',   widget: 'string', required: false },
-                        { label: 'TikTok URL',    name: 'tiktok',    widget: 'string', required: false },
-                      ],
-                    },
-                    {
-                      label: 'Shopify Merch Embed',
-                      name: 'shopifyEmbedCode',
-                      widget: 'text',
-                      required: false,
-                      hint: 'Paste the full Shopify Buy Button HTML embed code here (optional)',
-                    },
-                    {
-                      label: 'Event IDs',
-                      name: 'eventIds',
-                      widget: 'list',
-                      required: false,
-                      hint: 'Reference the ID of each event this artist has performed at',
-                      field: { label: 'Event ID', name: 'eventId', widget: 'string' },
-                    },
+                    { label: 'Instagram URL',  name: 'instagram',  widget: 'string', required: false },
+                    { label: 'Spotify URL',    name: 'spotify',    widget: 'string', required: false },
+                    { label: 'SoundCloud URL', name: 'soundcloud', widget: 'string', required: false },
+                    { label: 'Bandcamp URL',   name: 'bandcamp',   widget: 'string', required: false },
+                    { label: 'YouTube URL',    name: 'youtube',    widget: 'string', required: false },
+                    { label: 'TikTok URL',     name: 'tiktok',     widget: 'string', required: false },
                   ],
                 },
+                { label: 'Shopify Merch Embed', name: 'shopifyEmbedCode', widget: 'text',   required: false, hint: 'Paste the full Shopify Buy Button HTML here' },
+                { label: 'Event IDs',           name: 'eventIds',         widget: 'list',   required: false, field: { label: 'Event ID', name: 'eventId', widget: 'string' } },
               ],
-            },
-          ],
+            }],
+          }],
         },
 
       ],
