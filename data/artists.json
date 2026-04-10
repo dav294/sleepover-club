@@ -118,22 +118,22 @@
     },
     {
       "shopifyEmbedCode": "",
-      "genre": "Dream Pop",
-      "coverImage": "",
+      "genre": "Indie",
+      "coverImage": "assets/images/uploads/claudia-isaki-poster.jpg",
       "socials": {
-        "instagram": "",
-        "spotify": "",
+        "instagram": "https://www.instagram.com/claudiaisakimusic/?hl=en",
+        "spotify": "https://open.spotify.com/artist/5Q8asiEUYLobc6DvKIsqOP?si=B3nSPKmQQo-lFiGqtTIYZA",
         "soundcloud": "",
         "bandcamp": "",
-        "youtube": "",
+        "youtube": "https://www.youtube.com/@claudiaisakimusic",
         "tiktok": ""
       },
-      "origin": "Dublin, Ireland",
+      "origin": "London, UK",
       "bio": "Replace this with the artist biography.",
-      "name": "Artist Name",
+      "name": "Claudia Isaki",
       "featured": false,
       "gallery": [],
-      "id": "artist-6",
+      "id": "claudia-isaki",
       "eventIds": [
         "vol-47"
       ],
