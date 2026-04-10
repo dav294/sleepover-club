@@ -43,7 +43,10 @@
       "ageRestriction": "18+",
       "date": "2026-03-11",
       "venue": "The Sound House",
-      "artistIds": [],
+      "artistIds": [
+        "namebliss",
+        "halfpipe"
+      ],
       "doorsTime": "20:00",
       "gallery": [],
       "status": "past",
@@ -155,7 +158,9 @@
       "ageRestriction": "18+",
       "date": "2025-09-06",
       "venue": "Freebird Records",
-      "artistIds": [],
+      "artistIds": [
+        "claudia-isaki"
+      ],
       "doorsTime": "20:00",
       "gallery": [],
       "status": "past",
