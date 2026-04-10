@@ -1,0 +1,130 @@
+{
+  "items": [
+    {
+      "id": "artist-1",
+      "name": "Artist Name",
+      "genre": "Indie / Folk",
+      "origin": "Dublin, Ireland",
+      "bio": "Replace this with the artist biography. Describe their sound, background, and what makes them special. This appears on their dedicated artist page.",
+      "featured": true,
+      "coverImage": "",
+      "gallery": [],
+      "videoEmbed": "",
+      "socials": {
+        "instagram": "",
+        "spotify": "",
+        "soundcloud": "",
+        "bandcamp": "",
+        "youtube": "",
+        "tiktok": ""
+      },
+      "shopifyEmbedCode": "",
+      "eventIds": ["vol-49"]
+    },
+    {
+      "id": "artist-2",
+      "name": "Artist Name",
+      "genre": "Alternative / Rock",
+      "origin": "Cork, Ireland",
+      "bio": "Replace this with the artist biography.",
+      "featured": true,
+      "coverImage": "",
+      "gallery": [],
+      "videoEmbed": "",
+      "socials": {
+        "instagram": "",
+        "spotify": "",
+        "soundcloud": "",
+        "bandcamp": "",
+        "youtube": "",
+        "tiktok": ""
+      },
+      "shopifyEmbedCode": "",
+      "eventIds": ["vol-48-london", "vol-47"]
+    },
+    {
+      "id": "artist-3",
+      "name": "Artist Name",
+      "genre": "Electronic / Ambient",
+      "origin": "London, UK",
+      "bio": "Replace this with the artist biography.",
+      "featured": true,
+      "coverImage": "",
+      "gallery": [],
+      "videoEmbed": "",
+      "socials": {
+        "instagram": "",
+        "spotify": "",
+        "soundcloud": "",
+        "bandcamp": "",
+        "youtube": "",
+        "tiktok": ""
+      },
+      "shopifyEmbedCode": "",
+      "eventIds": ["vol-48-london"]
+    },
+    {
+      "id": "artist-4",
+      "name": "Artist Name",
+      "genre": "Singer-Songwriter",
+      "origin": "Galway, Ireland",
+      "bio": "Replace this with the artist biography.",
+      "featured": true,
+      "coverImage": "",
+      "gallery": [],
+      "videoEmbed": "",
+      "socials": {
+        "instagram": "",
+        "spotify": "",
+        "soundcloud": "",
+        "bandcamp": "",
+        "youtube": "",
+        "tiktok": ""
+      },
+      "shopifyEmbedCode": "",
+      "eventIds": ["vol-46-galway"]
+    },
+    {
+      "id": "artist-5",
+      "name": "Artist Name",
+      "genre": "Post-Punk / Indie",
+      "origin": "Belfast, Ireland",
+      "bio": "Replace this with the artist biography.",
+      "featured": false,
+      "coverImage": "",
+      "gallery": [],
+      "videoEmbed": "",
+      "socials": {
+        "instagram": "",
+        "spotify": "",
+        "soundcloud": "",
+        "bandcamp": "",
+        "youtube": "",
+        "tiktok": ""
+      },
+      "shopifyEmbedCode": "",
+      "eventIds": ["vol-45-belfast"]
+    },
+    {
+      "id": "artist-6",
+      "name": "Artist Name",
+      "genre": "Dream Pop",
+      "origin": "Dublin, Ireland",
+      "bio": "Replace this with the artist biography.",
+      "featured": false,
+      "coverImage": "",
+      "gallery": [],
+      "videoEmbed": "",
+      "socials": {
+        "instagram": "",
+        "spotify": "",
+        "soundcloud": "",
+        "bandcamp": "",
+        "youtube": "",
+        "tiktok": ""
+      },
+      "shopifyEmbedCode": "",
+      "eventIds": ["vol-47"]
+    }
+  ]
+}
