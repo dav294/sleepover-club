@@ -17,11 +17,30 @@
      - Stores paths as a plain string array in JSON
   ============================================================= */
 
+  var UPLOAD_TOKEN_KEY = 'sc-upload-token';
+
   function getCMSToken() {
-    try {
-      var raw = localStorage.getItem('netlify-cms-user') || '{}';
-      return JSON.parse(raw).token || null;
-    } catch (e) { return null; }
+    // 1. Our own saved PAT (set once via the widget's setup form)
+    var own = localStorage.getItem(UPLOAD_TOKEN_KEY);
+    if (own) return own;
+
+    // 2. Scan every localStorage entry — works regardless of which key
+    //    Decap CMS uses ('netlify-cms-user', 'decap-cms-user', etc.)
+    for (var i = 0; i < localStorage.length; i++) {
+      try {
+        var key = localStorage.key(i);
+        var val = JSON.parse(localStorage.getItem(key) || 'null');
+        if (val && typeof val.token === 'string' && val.token.length > 10) {
+          return val.token;
+        }
+      } catch (e) { /* skip non-JSON entries */ }
+    }
+
+    return null;
+  }
+
+  function saveUploadToken(token) {
+    localStorage.setItem(UPLOAD_TOKEN_KEY, token.trim());
   }
 
   function uploadFileToGitHub(file, token) {
@@ -58,7 +77,7 @@
   var MultiImageWidget = createClass({
 
     getInitialState: function () {
-      return { uploading: false, progress: [] };
+      return { uploading: false, progress: [], tokenInput: '', showTokenForm: !getCMSToken() };
     },
 
     getImages: function () {
@@ -73,7 +92,7 @@
       var self   = this;
       var token  = getCMSToken();
       if (!token) {
-        alert('Not authenticated — please log in to the CMS first, then try again.');
+        this.setState({ showTokenForm: true });
         return;
       }
 
@@ -121,12 +140,56 @@
       this.props.onChange(imgs.filter(function (_, i) { return i !== index; }));
     },
 
+    saveToken: function () {
+      var t = this.state.tokenInput.trim();
+      if (!t) return;
+      saveUploadToken(t);
+      this.setState({ showTokenForm: false, tokenInput: '' });
+    },
+
     render: function () {
       var self      = this;
       var uploading = this.state.uploading;
       var progress  = this.state.progress;
       var images    = this.getImages();
       var inputId   = 'multi-img-' + this.props.forID;
+
+      /* ── Token setup form (shown once if no token is found) ── */
+      if (this.state.showTokenForm) {
+        return h('div', { id: this.props.forID },
+          h('div', {
+            style: {
+              border: '1px solid #e0c97a', borderRadius: '8px',
+              padding: '20px 24px', background: '#fffdf0',
+            },
+          },
+            h('p', { style: { margin: '0 0 6px', fontWeight: 700, fontSize: '14px', color: '#333' } },
+              '🔑 One-time setup: GitHub upload token'),
+            h('p', { style: { margin: '0 0 14px', fontSize: '13px', color: '#666', lineHeight: 1.5 } },
+              'To upload images, paste a GitHub Personal Access Token with ',
+              h('strong', null, 'repo'), ' scope. ',
+              h('a', { href: 'https://github.com/settings/tokens/new?scopes=repo&description=Sleepover+Club+image+upload', target: '_blank', style: { color: '#1a6bb5' } }, 'Generate one here ↗'),
+              ' — you only need to do this once.'
+            ),
+            h('div', { style: { display: 'flex', gap: '8px' } },
+              h('input', {
+                type: 'password',
+                placeholder: 'ghp_xxxxxxxxxxxxxxxxxxxx',
+                value: this.state.tokenInput,
+                style: { flex: 1, padding: '8px 12px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '13px' },
+                onChange: function (e) { self.setState({ tokenInput: e.target.value }); },
+                onKeyDown: function (e) { if (e.key === 'Enter') self.saveToken(); },
+              }),
+              h('button', {
+                type: 'button',
+                style: { padding: '8px 16px', background: '#1a6bb5', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, fontSize: '13px' },
+                onClick: function () { self.saveToken(); },
+              }, 'Save')
+            )
+          )
+        );
+      }
+
 
       return h('div', { id: this.props.forID },
 
@@ -224,7 +287,16 @@
         /* ── Empty state ── */
         images.length === 0 && progress.length === 0 && h('p', {
           style: { color: '#aaa', fontSize: '12px', margin: '4px 0 0' },
-        }, 'No photos added yet.')
+        }, 'No photos added yet.'),
+
+        /* ── Change token link ── */
+        h('p', { style: { margin: '10px 0 0', fontSize: '11px', color: '#bbb' } },
+          h('a', {
+            href: '#',
+            style: { color: '#bbb' },
+            onClick: function (e) { e.preventDefault(); self.setState({ showTokenForm: true, tokenInput: '' }); },
+          }, 'Change upload token')
+        )
       );
     },
   });
