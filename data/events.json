@@ -110,7 +110,10 @@
       "venue": "The Big Romance",
       "artistIds": [],
       "doorsTime": "20:00",
-      "gallery": [],
+      "gallery": [
+        "assets/images/uploads/1775821146526-walshy-party-12.jpg",
+        "assets/images/uploads/1775821146542-walshy-party-8.jpg"
+      ],
       "status": "past",
       "address": "",
       "country": "Ireland",
