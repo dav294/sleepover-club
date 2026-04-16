@@ -3,423 +3,941 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin | Sleepover Club</title>
+  <title>Admin — Sleepover Club</title>
   <meta name="robots" content="noindex, nofollow">
-</head>
-<body>
-  <script>window.CMS_MANUAL_INIT = true;</script>
-  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
-  <script>
-  /* =============================================================
-     MULTI-IMAGE CUSTOM WIDGET
-     - Click or drag & drop to select many images at once
-     - Uploads directly to GitHub repo via API
-     - Stores paths as a plain string array in JSON
-  ============================================================= */
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  var UPLOAD_TOKEN_KEY = 'sc-upload-token';
-
-  function getCMSToken() {
-    // 1. Our own saved PAT (set once via the widget's setup form)
-    var own = localStorage.getItem(UPLOAD_TOKEN_KEY);
-    if (own) return own;
-
-    // 2. Scan every localStorage entry — works regardless of which key
-    //    Decap CMS uses ('netlify-cms-user', 'decap-cms-user', etc.)
-    for (var i = 0; i < localStorage.length; i++) {
-      try {
-        var key = localStorage.key(i);
-        var val = JSON.parse(localStorage.getItem(key) || 'null');
-        if (val && typeof val.token === 'string' && val.token.length > 10) {
-          return val.token;
-        }
-      } catch (e) { /* skip non-JSON entries */ }
+    :root {
+      --bg:           #0d0d0d;
+      --surface:      #1a1a1a;
+      --surface2:     #242424;
+      --border:       #2e2e2e;
+      --text:         #f0f0f0;
+      --muted:        #888;
+      --accent:       #c8a96e;
+      --accent-dark:  #a88950;
+      --danger:       #e05555;
+      --success:      #4caf7d;
+      --radius:       10px;
     }
 
-    return null;
+    body { font-family: 'Space Grotesk', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── AUTH ── */
+    .auth-wrap { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
+    .auth-box  { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:44px 40px; width:100%; max-width:460px; }
+    .auth-logo { font-size:20px; font-weight:700; color:var(--accent); margin-bottom:6px; }
+    .auth-sub  { font-size:13px; color:var(--muted); margin-bottom:32px; }
+
+    /* ── HEADER ── */
+    .hdr { display:flex; align-items:center; justify-content:space-between; padding:14px 28px; background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:200; }
+    .hdr-logo { font-size:15px; font-weight:700; color:var(--accent); cursor:pointer; letter-spacing:-0.3px; }
+    .hdr-crumb { font-size:13px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+    .hdr-crumb .c { color:var(--text); cursor:pointer; } .hdr-crumb .c:hover { color:var(--accent); }
+    .hdr-right { display:flex; gap:10px; }
+
+    /* ── BUTTONS ── */
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 18px; border-radius:8px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; border:none; transition:all .15s; }
+    .btn-primary  { background:var(--accent); color:#0d0d0d; }
+    .btn-primary:hover  { background:var(--accent-dark); }
+    .btn-ghost    { background:transparent; color:var(--muted); border:1px solid var(--border); }
+    .btn-ghost:hover    { border-color:var(--accent); color:var(--accent); }
+    .btn-danger   { background:transparent; color:var(--danger); border:1px solid var(--border); }
+    .btn-danger:hover   { background:rgba(224,85,85,.1); border-color:var(--danger); }
+    .btn:disabled { opacity:.45; cursor:not-allowed; }
+
+    /* ── HOME ── */
+    .home-wrap { display:flex; align-items:center; justify-content:center; min-height:calc(100vh - 57px); padding:40px 24px; }
+    .home-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; width:100%; max-width:680px; }
+    .home-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:60px 40px; text-align:center; cursor:pointer; transition:all .2s; display:flex; flex-direction:column; align-items:center; gap:14px; }
+    .home-card:hover { border-color:var(--accent); background:var(--surface2); transform:translateY(-3px); }
+    .home-card-icon  { font-size:42px; line-height:1; }
+    .home-card-title { font-size:22px; font-weight:700; letter-spacing:-.5px; }
+    .home-card-count { font-size:13px; color:var(--muted); }
+
+    /* ── COLLECTION ── */
+    .col-wrap   { padding:32px; }
+    .col-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:26px; }
+    .col-title  { font-size:26px; font-weight:700; letter-spacing:-.5px; }
+    .col-grid   { display:grid; grid-template-columns:repeat(auto-fill, minmax(190px, 1fr)); gap:14px; }
+
+    .item-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; cursor:pointer; transition:all .15s; }
+    .item-card:hover { border-color:var(--accent); background:var(--surface2); }
+    .item-card-title { font-size:14px; font-weight:600; line-height:1.3; margin-bottom:6px; }
+    .item-card-sub   { font-size:12px; color:var(--muted); }
+    .badge { display:inline-block; margin-top:10px; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:600; }
+    .badge-up   { background:rgba(200,169,110,.15); color:var(--accent); }
+    .badge-past { background:rgba(255,255,255,.06); color:var(--muted); }
+
+    .add-card { background:transparent; border:2px dashed var(--border); border-radius:var(--radius); padding:20px; cursor:pointer; transition:all .15s; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-height:96px; color:var(--muted); }
+    .add-card:hover { border-color:var(--accent); color:var(--accent); }
+    .add-card-icon { font-size:22px; }
+    .add-card-label { font-size:13px; font-weight:600; }
+
+    /* ── EDITOR ── */
+    .ed-layout  { display:grid; grid-template-columns:1fr 360px; min-height:calc(100vh - 57px); }
+    .ed-form    { padding:32px; border-right:1px solid var(--border); overflow-y:auto; }
+    .ed-preview { padding:28px; overflow-y:auto; position:sticky; top:57px; height:calc(100vh - 57px); }
+
+    .ed-form-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; }
+    .ed-form-title  { font-size:22px; font-weight:700; letter-spacing:-.5px; }
+    .ed-actions     { display:flex; gap:10px; }
+
+    .sec { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--accent); margin:28px 0 16px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+
+    .fg  { margin-bottom:18px; }
+    .row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    label { display:block; font-size:12px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; margin-bottom:5px; }
+    .hint { font-size:11px; color:var(--muted); margin-top:4px; }
+
+    input[type=text], input[type=url], input[type=date], input[type=password], textarea, select {
+      width:100%; background:var(--surface); border:1px solid var(--border); border-radius:8px;
+      padding:10px 12px; font-size:14px; font-family:inherit; color:var(--text); transition:border-color .15s;
+    }
+    input:focus, textarea:focus, select:focus { outline:none; border-color:var(--accent); }
+    input[readonly] { opacity:.5; cursor:not-allowed; }
+    textarea { resize:vertical; min-height:88px; }
+    select option { background:var(--surface); }
+
+    /* toggle */
+    .toggle-row { display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px 14px; }
+    .toggle-row-label { font-size:14px; }
+    .tog { position:relative; width:40px; height:22px; flex-shrink:0; }
+    .tog input { opacity:0; width:0; height:0; }
+    .tog-slider { position:absolute; inset:0; background:var(--border); border-radius:22px; cursor:pointer; transition:.2s; }
+    .tog-slider::before { content:''; position:absolute; height:16px; width:16px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.2s; }
+    .tog input:checked + .tog-slider { background:var(--accent); }
+    .tog input:checked + .tog-slider::before { transform:translateX(18px); }
+
+    /* tags */
+    .tags-wrap { display:flex; flex-wrap:wrap; gap:6px; padding:8px; background:var(--surface); border:1px solid var(--border); border-radius:8px; min-height:42px; align-items:center; cursor:text; }
+    .tags-wrap:focus-within { border-color:var(--accent); }
+    .chip { background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:3px 8px; font-size:12px; display:flex; align-items:center; gap:4px; white-space:nowrap; }
+    .chip button { background:none; border:none; color:var(--muted); cursor:pointer; padding:0; font-size:13px; line-height:1; }
+    .chip button:hover { color:var(--text); }
+    .tag-input { flex:1; min-width:80px; background:none; border:none; color:var(--text); font-size:13px; padding:2px 4px; }
+    .tag-input:focus { outline:none; }
+
+    /* image */
+    .img-zone { border:2px dashed var(--border); border-radius:8px; padding:24px; text-align:center; cursor:pointer; transition:border-color .15s; }
+    .img-zone:hover { border-color:var(--accent); }
+    .img-zone p { font-size:12px; color:var(--muted); margin-top:6px; }
+    .img-preview { position:relative; display:inline-block; }
+    .img-preview img { max-width:100%; max-height:180px; border-radius:8px; display:block; }
+    .img-remove { position:absolute; top:6px; right:6px; background:rgba(0,0,0,.7); color:#fff; border:none; border-radius:50%; width:22px; height:22px; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; }
+
+    .gallery-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(76px, 1fr)); gap:7px; margin-bottom:8px; }
+    .gthumb { position:relative; aspect-ratio:1; border-radius:6px; overflow:hidden; background:var(--surface2); }
+    .gthumb img { width:100%; height:100%; object-fit:cover; }
+    .gthumb .img-remove { width:18px; height:18px; font-size:11px; top:3px; right:3px; }
+
+    /* preview */
+    .pv-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:14px; }
+    .pv-card  { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+    .pv-cover { width:100%; aspect-ratio:16/9; object-fit:cover; display:block; }
+    .pv-cover-ph { width:100%; aspect-ratio:16/9; background:var(--surface2); display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:13px; }
+    .pv-body  { padding:16px; }
+    .pv-title { font-size:16px; font-weight:700; margin-bottom:4px; line-height:1.2; }
+    .pv-meta  { font-size:12px; color:var(--muted); display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+    .pv-desc  { font-size:13px; color:var(--muted); line-height:1.5; }
+
+    /* toast */
+    .toast { position:fixed; bottom:22px; right:22px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:11px 18px; font-size:13px; z-index:9999; transform:translateY(60px); opacity:0; transition:all .25s; pointer-events:none; }
+    .toast.show  { transform:translateY(0); opacity:1; }
+    .toast.ok    { border-color:var(--success); }
+    .toast.err   { border-color:var(--danger); }
+
+    .spinner { display:flex; align-items:center; justify-content:center; padding:80px; color:var(--muted); font-size:14px; }
+
+    @media (max-width:800px) {
+      .home-grid { grid-template-columns:1fr; max-width:360px; }
+      .ed-layout  { grid-template-columns:1fr; }
+      .ed-preview { display:none; }
+      .row { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════
+const REPO    = 'dav294/sleepover-club';
+const BRANCH  = 'main';
+const TOK_KEY = 'sc-upload-token';
+
+// ═══════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════
+let S = {
+  route: 'home',      // home | events | artists | edit-event | edit-artist
+  editId: null,
+  events: [],
+  artists: [],
+  evSha: null,
+  arSha: null,
+  busy: false,
+};
+let _draft = null;    // working copy of item being edited
+
+// ═══════════════════════════════════════════════════
+//  GITHUB API
+// ═══════════════════════════════════════════════════
+const tok = () => localStorage.getItem(TOK_KEY);
+const hdrs = () => ({ Authorization: 'token ' + tok(), 'Content-Type': 'application/json' });
+
+async function ghRead(path) {
+  const r = await fetch(`https://api.github.com/repos/${REPO}/contents/${path}`, {
+    headers: { Authorization: 'token ' + tok(), Accept: 'application/vnd.github.v3+json' },
+  });
+  if (!r.ok) throw new Error('GitHub ' + r.status + ' reading ' + path);
+  const j = await r.json();
+  const text = decodeURIComponent(escape(atob(j.content.replace(/\n/g, ''))));
+  return { data: JSON.parse(text), sha: j.sha };
+}
+
+async function ghWrite(path, data, sha, msg) {
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+  const body = { message: msg, content, branch: BRANCH };
+  if (sha) body.sha = sha;
+  const r = await fetch(`https://api.github.com/repos/${REPO}/contents/${path}`, {
+    method: 'PUT', headers: hdrs(), body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error('GitHub ' + r.status + ' writing ' + path);
+  return (await r.json()).content.sha;
+}
+
+async function ghUpload(file) {
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onerror = rej;
+    fr.onload = async e => {
+      const b64  = e.target.result.split(',')[1];
+      const name = file.name.replace(/[^a-zA-Z0-9._-]/g, '-').toLowerCase();
+      const path = 'assets/images/uploads/' + Date.now() + '-' + name;
+      const r = await fetch(`https://api.github.com/repos/${REPO}/contents/${path}`, {
+        method: 'PUT', headers: hdrs(),
+        body: JSON.stringify({ message: 'Upload: ' + file.name, content: b64 }),
+      });
+      if (!r.ok) throw new Error('Upload failed ' + r.status);
+      res(path);
+    };
+    fr.readAsDataURL(file);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  LOAD / SAVE
+// ═══════════════════════════════════════════════════
+async function loadAll() {
+  S.busy = true; render();
+  try {
+    const [ev, ar] = await Promise.all([ghRead('data/events.json'), ghRead('data/artists.json')]);
+    S.events  = ev.data.items || [];
+    S.evSha   = ev.sha;
+    S.artists = ar.data.items || [];
+    S.arSha   = ar.sha;
+  } catch(e) { toast('Failed to load: ' + e.message, 'err'); }
+  S.busy = false; render();
+}
+
+async function saveEvents()  { S.evSha = await ghWrite('data/events.json',  { items: S.events  }, S.evSha, 'CMS: update events');  }
+async function saveArtists() { S.arSha = await ghWrite('data/artists.json', { items: S.artists }, S.arSha, 'CMS: update artists'); }
+
+// ═══════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════
+function toast(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  el.textContent = (type === 'ok' ? '✓  ' : '✗  ') + msg;
+  el.className = 'toast ' + type + ' show';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { el.className = 'toast'; }, 3500);
+}
+
+// ═══════════════════════════════════════════════════
+//  ROUTING
+// ═══════════════════════════════════════════════════
+function go(route, id = null) { S.route = route; S.editId = id; _draft = null; render(); window.scrollTo(0,0); }
+
+// ═══════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function slug(s){ return (s||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
+function fmtDate(d) {
+  if (!d) return '';
+  try { return new Date(d+'T00:00:00').toLocaleDateString('en-IE',{day:'numeric',month:'short',year:'numeric'}); }
+  catch { return d; }
+}
+function blankEvent() {
+  return { id:'',title:'',subtitle:'',status:'upcoming',date:'',doorsTime:'',endTime:'',venue:'',
+    address:'',city:'',country:'Ireland',ageRestriction:'18+',coverImage:'',poster:'',gallery:[],
+    videoEmbed:'',shortDesc:'',fullDesc:'',ticketLink:'',soldOut:false,tags:[],artistIds:[] };
+}
+function blankArtist() {
+  return { id:'',name:'',genre:'',origin:'',bio:'',featured:true,coverImage:'',gallery:[],
+    videoEmbed:'', socials:{instagram:'',spotify:'',soundcloud:'',bandcamp:'',youtube:'',tiktok:''},
+    shopifyEmbedCode:'',eventIds:[] };
+}
+function clone(o) { return JSON.parse(JSON.stringify(o)); }
+function val(id)  { const el = document.getElementById(id); return el ? el.value : ''; }
+
+// ═══════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════
+function render() {
+  const app = document.getElementById('app');
+  if (!tok())     { app.innerHTML = authHTML();                        bindAuth();        return; }
+  if (S.busy)     { app.innerHTML = hdr() + '<div class="spinner">Loading…</div>'; bindHdr(); return; }
+  switch (S.route) {
+    case 'home':        app.innerHTML = hdr() + homeHTML();        bindHdr(); bindHome();        break;
+    case 'events':      app.innerHTML = hdr() + eventsHTML();      bindHdr(); bindEvents();      break;
+    case 'artists':     app.innerHTML = hdr() + artistsHTML();     bindHdr(); bindArtists();     break;
+    case 'edit-event':  app.innerHTML = hdr() + editEventHTML();   bindHdr(); bindEditEvent();   break;
+    case 'edit-artist': app.innerHTML = hdr() + editArtistHTML();  bindHdr(); bindEditArtist();  break;
   }
+}
 
-  function saveUploadToken(token) {
-    localStorage.setItem(UPLOAD_TOKEN_KEY, token.trim());
+// ─── AUTH ───────────────────────────────────────────
+function authHTML() { return `
+  <div class="auth-wrap"><div class="auth-box">
+    <div class="auth-logo">Sleepover Club</div>
+    <div class="auth-sub">Admin — content management</div>
+    <div class="fg">
+      <label>GitHub Personal Access Token</label>
+      <input type="password" id="pat" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+      <div class="hint">Needs <strong>repo</strong> scope. &nbsp;<a href="https://github.com/settings/tokens/new?scopes=repo&description=Sleepover+Club+CMS" target="_blank" style="color:var(--accent)">Generate one ↗</a></div>
+    </div>
+    <button class="btn btn-primary" id="auth-btn" style="width:100%;justify-content:center;padding:12px 18px">Log in</button>
+  </div></div>`; }
+
+function bindAuth() {
+  const btn = document.getElementById('auth-btn');
+  const input = document.getElementById('pat');
+  const go = async () => {
+    const v = input.value.trim(); if (!v) return;
+    localStorage.setItem(TOK_KEY, v);
+    await loadAll();
+  };
+  btn.onclick = go;
+  input.addEventListener('keydown', e => { if (e.key==='Enter') go(); });
+}
+
+// ─── HEADER ─────────────────────────────────────────
+function hdr() {
+  let crumb = '';
+  if (S.route === 'events')      crumb = 'Events';
+  if (S.route === 'artists')     crumb = 'Artists';
+  if (S.route === 'edit-event')  {
+    const it = S.editId ? S.events.find(e=>e.id===S.editId) : null;
+    crumb = `<span class="c" data-go="events">Events</span> <span>/</span> ${it ? esc(it.title) : 'New Event'}`;
   }
+  if (S.route === 'edit-artist') {
+    const it = S.editId ? S.artists.find(a=>a.id===S.editId) : null;
+    crumb = `<span class="c" data-go="artists">Artists</span> <span>/</span> ${it ? esc(it.name) : 'New Artist'}`;
+  }
+  return `
+  <header class="hdr">
+    <div class="hdr-logo" id="h-logo">Sleepover Club</div>
+    <div class="hdr-crumb">${crumb}</div>
+    <div class="hdr-right">
+      ${S.route!=='home' ? `<button class="btn btn-ghost" id="h-back">← Home</button>` : ''}
+      <button class="btn btn-ghost" id="h-logout" style="font-size:12px;padding:7px 12px">Log out</button>
+    </div>
+  </header>`;
+}
 
-  function uploadFileToGitHub(file, token) {
-    return new Promise(function (resolve, reject) {
-      var reader = new FileReader();
-      reader.onerror = reject;
-      reader.onload = function (e) {
-        var base64   = e.target.result.split(',')[1];
-        var safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-').toLowerCase();
-        var path     = 'assets/images/uploads/' + Date.now() + '-' + safeName;
+function bindHdr() {
+  document.getElementById('h-logo').onclick = () => go('home');
+  const back = document.getElementById('h-back');
+  if (back) back.onclick = () => go('home');
+  document.getElementById('h-logout').onclick = () => {
+    if (confirm('Log out?')) { localStorage.removeItem(TOK_KEY); render(); }
+  };
+  document.querySelectorAll('.hdr-crumb .c[data-go]').forEach(el => {
+    el.onclick = () => go(el.dataset.go);
+  });
+}
 
-        fetch('https://api.github.com/repos/dav294/sleepover-club/contents/' + path, {
-          method: 'PUT',
-          headers: {
-            Authorization: 'token ' + token,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            message: 'Upload media: ' + file.name,
-            content: base64,
-          }),
-        })
-          .then(function (res) {
-            if (!res.ok) throw new Error('GitHub API ' + res.status);
-            resolve(path);
-          })
-          .catch(reject);
+// ─── HOME ────────────────────────────────────────────
+function homeHTML() { return `
+  <div class="home-wrap"><div class="home-grid">
+    <div class="home-card" id="go-events">
+      <div class="home-card-icon">🎶</div>
+      <div class="home-card-title">Events</div>
+      <div class="home-card-count">${S.events.length} event${S.events.length!==1?'s':''}</div>
+    </div>
+    <div class="home-card" id="go-artists">
+      <div class="home-card-icon">🎤</div>
+      <div class="home-card-title">Artists</div>
+      <div class="home-card-count">${S.artists.length} artist${S.artists.length!==1?'s':''}</div>
+    </div>
+  </div></div>`; }
+
+function bindHome() {
+  document.getElementById('go-events').onclick  = () => go('events');
+  document.getElementById('go-artists').onclick = () => go('artists');
+}
+
+// ─── EVENTS GRID ────────────────────────────────────
+function eventsHTML() {
+  const cards = S.events.map(e => `
+    <div class="item-card" data-id="${esc(e.id)}">
+      <div class="item-card-title">${esc(e.title)||'(Untitled)'}</div>
+      <div class="item-card-sub">${fmtDate(e.date)}${e.venue?` · ${esc(e.venue)}`:''}${e.city?`, ${esc(e.city)}`:''}</div>
+      <span class="badge badge-${e.status==='upcoming'?'up':'past'}">${e.status||'past'}</span>
+    </div>`).join('');
+  return `
+  <div class="col-wrap">
+    <div class="col-header">
+      <h1 class="col-title">Events</h1>
+      <button class="btn btn-primary" id="new-ev-btn">+ New Event</button>
+    </div>
+    <div class="col-grid">
+      ${cards}
+      <div class="add-card" id="add-ev-card"><div class="add-card-icon">+</div><div class="add-card-label">Add Event</div></div>
+    </div>
+  </div>`; }
+
+function bindEvents() {
+  document.querySelectorAll('.item-card[data-id]').forEach(el => { el.onclick = () => go('edit-event', el.dataset.id); });
+  document.getElementById('new-ev-btn').onclick   = () => go('edit-event', null);
+  document.getElementById('add-ev-card').onclick  = () => go('edit-event', null);
+}
+
+// ─── ARTISTS GRID ───────────────────────────────────
+function artistsHTML() {
+  const cards = S.artists.map(a => `
+    <div class="item-card" data-id="${esc(a.id)}">
+      <div class="item-card-title">${esc(a.name)||'(Unnamed)'}</div>
+      <div class="item-card-sub">${esc(a.genre||'')}${a.origin?` · ${esc(a.origin)}`:''}</div>
+      ${a.featured?`<span class="badge badge-up">Featured</span>`:''}
+    </div>`).join('');
+  return `
+  <div class="col-wrap">
+    <div class="col-header">
+      <h1 class="col-title">Artists</h1>
+      <button class="btn btn-primary" id="new-ar-btn">+ New Artist</button>
+    </div>
+    <div class="col-grid">
+      ${cards}
+      <div class="add-card" id="add-ar-card"><div class="add-card-icon">+</div><div class="add-card-label">Add Artist</div></div>
+    </div>
+  </div>`; }
+
+function bindArtists() {
+  document.querySelectorAll('.item-card[data-id]').forEach(el => { el.onclick = () => go('edit-artist', el.dataset.id); });
+  document.getElementById('new-ar-btn').onclick   = () => go('edit-artist', null);
+  document.getElementById('add-ar-card').onclick  = () => go('edit-artist', null);
+}
+
+// ═══════════════════════════════════════════════════
+//  IMAGE HELPERS
+// ═══════════════════════════════════════════════════
+function imgZone(type, src) {
+  if (src) return `<div class="img-preview"><img src="/${esc(src)}" onerror="this.style.opacity='.3'"><button class="img-remove" data-rm-img="${type}">×</button></div>`;
+  return `<div class="img-zone" id="iz-${type}"><label for="if-${type}" style="cursor:pointer;display:block"><div style="font-size:22px">🖼️</div><p>Click to upload</p></label></div>`;
+}
+
+function galleryHTML(arr) {
+  if (!arr || !arr.length) return `<p style="font-size:12px;color:var(--muted)">No photos yet.</p>`;
+  return `<div class="gallery-grid">${arr.map((s,i)=>`<div class="gthumb"><img src="/${esc(s)}" onerror="this.style.opacity='.3'"><button class="img-remove" data-rm-gal="${i}">×</button></div>`).join('')}</div>`;
+}
+
+function bindImgUpload(type, onDone) {
+  const input = document.getElementById('if-' + type);
+  const zone  = document.getElementById('iz-' + type);
+  if (input) input.onchange = () => { if (input.files[0]) doImgUpload(input.files[0], type, onDone); };
+  if (zone) {
+    zone.ondragover = e => e.preventDefault();
+    zone.ondrop     = e => { e.preventDefault(); if (e.dataTransfer.files[0]) doImgUpload(e.dataTransfer.files[0], type, onDone); };
+  }
+}
+
+async function doImgUpload(file, type, onDone) {
+  toast('Uploading…');
+  try { const p = await ghUpload(file); onDone(p); toast('Uploaded'); }
+  catch(e) { toast('Upload failed: ' + e.message, 'err'); }
+}
+
+function bindGalleryUpload(onDone) {
+  const input = document.getElementById('gal-file');
+  const zone  = document.getElementById('gal-zone');
+  if (input) input.onchange = () => doGalleryUpload(input.files, onDone);
+  if (zone) {
+    zone.ondragover = e => e.preventDefault();
+    zone.ondrop     = e => { e.preventDefault(); doGalleryUpload(e.dataTransfer.files, onDone); };
+  }
+}
+
+async function doGalleryUpload(files, onDone) {
+  const arr = Array.from(files).filter(f => f.type.startsWith('image/'));
+  if (!arr.length) return;
+  toast('Uploading ' + arr.length + ' image(s)…');
+  for (const f of arr) {
+    try { onDone(await ghUpload(f)); }
+    catch(e) { toast('Upload failed: ' + e.message, 'err'); }
+  }
+  toast('Gallery updated');
+}
+
+// ═══════════════════════════════════════════════════
+//  TAG INPUT
+// ═══════════════════════════════════════════════════
+function tagsHTML(arr, prefix) {
+  return arr.map((t,i) => `<div class="chip">${esc(t)}<button data-rm="${prefix}-${i}">×</button></div>`).join('');
+}
+
+function setupTags(wrapperId, inputId, getArr, setArr, onChange) {
+  const wrap  = document.getElementById(wrapperId);
+  const input = document.getElementById(inputId);
+  if (!wrap || !input) return;
+
+  const add = v => {
+    v = v.trim(); if (!v) return;
+    const a = getArr(); if (!a.includes(v)) { a.push(v); setArr(a); reRenderChips(); onChange&&onChange(); }
+  };
+  const reRenderChips = () => {
+    wrap.querySelectorAll('.chip').forEach(c => c.remove());
+    const chips = document.createRange().createContextualFragment(tagsHTML(getArr(), wrapperId));
+    wrap.insertBefore(chips, input);
+    wrap.querySelectorAll(`[data-rm^="${wrapperId}-"]`).forEach(btn => {
+      btn.onclick = () => {
+        const i = parseInt(btn.dataset.rm.split('-').pop());
+        const a = getArr(); a.splice(i, 1); setArr(a); reRenderChips(); onChange&&onChange();
       };
-      reader.readAsDataURL(file);
+    });
+  };
+
+  // Bind existing chips
+  wrap.querySelectorAll(`[data-rm^="${wrapperId}-"]`).forEach(btn => {
+    btn.onclick = () => {
+      const i = parseInt(btn.dataset.rm.split('-').pop());
+      const a = getArr(); a.splice(i, 1); setArr(a); reRenderChips(); onChange&&onChange();
+    };
+  });
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add(input.value); input.value = ''; }
+    if (e.key === 'Backspace' && !input.value) {
+      const a = getArr(); if (a.length) { a.pop(); setArr(a); reRenderChips(); onChange&&onChange(); }
+    }
+  });
+
+  wrap.onclick = () => input.focus();
+}
+
+// ═══════════════════════════════════════════════════
+//  EVENT EDITOR
+// ═══════════════════════════════════════════════════
+function editEventHTML() {
+  const base = S.editId ? (S.events.find(e=>e.id===S.editId) || blankEvent()) : blankEvent();
+  _draft = clone(base);
+  const it = _draft;
+  const isNew = !S.editId;
+
+  return `
+  <div class="ed-layout">
+    <div class="ed-form">
+      <div class="ed-form-header">
+        <div class="ed-form-title">${isNew ? 'New Event' : 'Edit Event'}</div>
+        <div class="ed-actions">
+          ${!isNew ? `<button class="btn btn-danger" id="del-btn">Delete</button>` : ''}
+          <button class="btn btn-primary" id="save-btn">Save &amp; Publish</button>
+        </div>
+      </div>
+
+      <div class="sec">Basic Info</div>
+
+      <div class="fg"><label>Title</label>
+        <input type="text" id="f-title" value="${esc(it.title)}" placeholder="Event title"></div>
+
+      <div class="row">
+        <div class="fg"><label>ID / Slug</label>
+          <input type="text" id="f-id" value="${esc(it.id)}" placeholder="vol-50-dublin" ${!isNew?'readonly':''}>
+          <div class="hint">Auto-generated from title if blank.</div></div>
+        <div class="fg"><label>Status</label>
+          <select id="f-status">
+            <option value="upcoming" ${it.status==='upcoming'?'selected':''}>Upcoming</option>
+            <option value="past"     ${it.status==='past'    ?'selected':''}>Past</option>
+          </select></div>
+      </div>
+
+      <div class="fg"><label>Subtitle <span style="font-weight:400;text-transform:none">(optional)</span></label>
+        <input type="text" id="f-subtitle" value="${esc(it.subtitle)}" placeholder="Optional subtitle"></div>
+
+      <div class="sec">Date &amp; Venue</div>
+
+      <div class="row">
+        <div class="fg"><label>Date</label><input type="date" id="f-date" value="${esc(it.date)}"></div>
+        <div class="fg"><label>Doors</label><input type="text" id="f-doors" value="${esc(it.doorsTime)}" placeholder="20:00"></div>
+      </div>
+      <div class="row">
+        <div class="fg"><label>End Time</label><input type="text" id="f-end" value="${esc(it.endTime)}" placeholder="02:00"></div>
+        <div class="fg"><label>Age Restriction</label><input type="text" id="f-age" value="${esc(it.ageRestriction||'18+')}" placeholder="18+"></div>
+      </div>
+      <div class="fg"><label>Venue</label><input type="text" id="f-venue" value="${esc(it.venue)}" placeholder="Venue name"></div>
+      <div class="fg"><label>Address <span style="font-weight:400;text-transform:none">(optional)</span></label>
+        <input type="text" id="f-addr" value="${esc(it.address)}" placeholder="Street address"></div>
+      <div class="row">
+        <div class="fg"><label>City</label><input type="text" id="f-city" value="${esc(it.city)}" placeholder="Dublin"></div>
+        <div class="fg"><label>Country</label><input type="text" id="f-country" value="${esc(it.country||'Ireland')}" placeholder="Ireland"></div>
+      </div>
+
+      <div class="sec">Description</div>
+
+      <div class="fg"><label>Short Description</label>
+        <textarea id="f-short" placeholder="1–2 sentences for event cards">${esc(it.shortDesc)}</textarea></div>
+      <div class="fg"><label>Full Description</label>
+        <textarea id="f-full" style="min-height:130px" placeholder="Full description for the event page">${esc(it.fullDesc)}</textarea></div>
+
+      <div class="sec">Media</div>
+
+      <div class="fg"><label>Cover Image</label>
+        <div id="cover-zone">${imgZone('cover', it.coverImage)}</div>
+        <input type="file" id="if-cover" accept="image/*" style="display:none"></div>
+
+      <div class="fg"><label>Poster (A4 portrait)</label>
+        <div id="poster-zone">${imgZone('poster', it.poster)}</div>
+        <input type="file" id="if-poster" accept="image/*" style="display:none"></div>
+
+      <div class="fg"><label>Gallery Photos</label>
+        <div id="gal-zone-thumbs">${galleryHTML(it.gallery)}</div>
+        <div class="img-zone" id="gal-zone" style="margin-top:8px">
+          <label for="gal-file" style="cursor:pointer;display:block"><div style="font-size:20px">📁</div><p>Click to add photos · drag &amp; drop works too</p></label>
+          <input type="file" id="gal-file" accept="image/*" multiple style="display:none">
+        </div></div>
+
+      <div class="fg"><label>Video Embed URL <span style="font-weight:400;text-transform:none">(optional)</span></label>
+        <input type="url" id="f-video" value="${esc(it.videoEmbed)}" placeholder="https://www.youtube.com/embed/VIDEO_ID">
+        <div class="hint">YouTube or Vimeo embed src URL</div></div>
+
+      <div class="sec">Tickets &amp; Tags</div>
+
+      <div class="fg"><label>Ticket Link</label>
+        <input type="url" id="f-ticket" value="${esc(it.ticketLink)}" placeholder="https://dice.fm/…"></div>
+
+      <div class="fg"><div class="toggle-row"><span class="toggle-row-label">Sold Out</span>
+        <label class="tog"><input type="checkbox" id="f-soldout" ${it.soldOut?'checked':''}><span class="tog-slider"></span></label></div></div>
+
+      <div class="fg"><label>Tags</label>
+        <div class="tags-wrap" id="tw-tags">
+          ${tagsHTML(it.tags||[], 'tw-tags')}
+          <input class="tag-input" id="ti-tags" placeholder="Add tag, press Enter">
+        </div></div>
+
+      <div class="fg"><label>Artist IDs</label>
+        <div class="tags-wrap" id="tw-aids">
+          ${tagsHTML(it.artistIds||[], 'tw-aids')}
+          <input class="tag-input" id="ti-aids" placeholder="Add artist ID, press Enter">
+        </div>
+        <div class="hint">Reference the ID of each artist performing</div></div>
+
+      <div style="height:60px"></div>
+    </div>
+
+    <div class="ed-preview">
+      <div class="pv-label">Preview</div>
+      <div id="pv">${evPreview(_draft)}</div>
+    </div>
+  </div>`; }
+
+function bindEditEvent() {
+  const it = _draft;
+
+  function collectBasic() {
+    it.title         = val('f-title');
+    it.subtitle      = val('f-subtitle');
+    it.id            = val('f-id') || it.id;
+    it.status        = val('f-status');
+    it.date          = val('f-date');
+    it.doorsTime     = val('f-doors');
+    it.endTime       = val('f-end');
+    it.ageRestriction= val('f-age');
+    it.venue         = val('f-venue');
+    it.address       = val('f-addr');
+    it.city          = val('f-city');
+    it.country       = val('f-country');
+    it.shortDesc     = val('f-short');
+    it.fullDesc      = val('f-full');
+    it.videoEmbed    = val('f-video');
+    it.ticketLink    = val('f-ticket');
+    it.soldOut       = document.getElementById('f-soldout')?.checked || false;
+  }
+
+  const refreshPreview = () => { collectBasic(); document.getElementById('pv').innerHTML = evPreview(it); };
+
+  ['f-title','f-subtitle','f-date','f-doors','f-end','f-venue','f-city','f-short','f-status'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', refreshPreview);
+  });
+  document.getElementById('f-status')?.addEventListener('change', refreshPreview);
+  document.getElementById('f-soldout')?.addEventListener('change', refreshPreview);
+
+  // Cover
+  bindImgUpload('cover', p => { it.coverImage = p; document.getElementById('cover-zone').innerHTML = imgZone('cover', p); bindRmImg(); refreshPreview(); });
+  // Poster
+  bindImgUpload('poster', p => { it.poster = p; document.getElementById('poster-zone').innerHTML = imgZone('poster', p); bindRmImg(); });
+  // Gallery
+  bindGalleryUpload(p => { if (!it.gallery) it.gallery=[]; it.gallery.push(p); document.getElementById('gal-zone-thumbs').innerHTML = galleryHTML(it.gallery); bindRmGal(); });
+
+  function bindRmImg() {
+    document.querySelectorAll('[data-rm-img]').forEach(btn => {
+      btn.onclick = () => {
+        const t = btn.dataset.rmImg;
+        if (t==='cover')  { it.coverImage=''; document.getElementById('cover-zone').innerHTML  = imgZone('cover','');  bindImgUpload('cover',  p => { it.coverImage=p; document.getElementById('cover-zone').innerHTML  = imgZone('cover',p);  bindRmImg(); refreshPreview(); }); }
+        if (t==='poster') { it.poster='';     document.getElementById('poster-zone').innerHTML = imgZone('poster',''); bindImgUpload('poster', p => { it.poster=p;     document.getElementById('poster-zone').innerHTML = imgZone('poster',p); bindRmImg(); }); }
+        refreshPreview();
+      };
     });
   }
 
-  /* ── React class component (createClass + h exposed by Decap CMS) ── */
-  var MultiImageWidget = createClass({
+  function bindRmGal() {
+    document.querySelectorAll('[data-rm-gal]').forEach(btn => {
+      btn.onclick = () => { it.gallery.splice(parseInt(btn.dataset.rmGal),1); document.getElementById('gal-zone-thumbs').innerHTML = galleryHTML(it.gallery); bindRmGal(); };
+    });
+  }
+  bindRmImg(); bindRmGal();
 
-    getInitialState: function () {
-      return { uploading: false, progress: [], tokenInput: '', showTokenForm: !getCMSToken() };
-    },
+  // Tags
+  setupTags('tw-tags', 'ti-tags', ()=>it.tags, a=>{it.tags=a;}, refreshPreview);
+  setupTags('tw-aids', 'ti-aids', ()=>it.artistIds, a=>{it.artistIds=a;});
 
-    getImages: function () {
-      var v = this.props.value;
-      if (!v) return [];
-      if (Array.isArray(v)) return v;
-      if (typeof v.toJS === 'function') return v.toJS();
-      return [];
-    },
+  // Save
+  document.getElementById('save-btn').onclick = async () => {
+    collectBasic();
+    if (!it.id) it.id = slug(it.title);
+    if (!it.id) { toast('Add a title or ID first', 'err'); return; }
+    const btn = document.getElementById('save-btn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      const idx = S.events.findIndex(e => e.id === it.id);
+      if (idx >= 0) S.events[idx] = it; else S.events.unshift(it);
+      await saveEvents();
+      toast('Event saved & published');
+      S.editId = it.id;
+      go('edit-event', it.id);
+    } catch(e) { toast('Save failed: ' + e.message, 'err'); btn.disabled=false; btn.textContent='Save & Publish'; }
+  };
 
-    handleFiles: function (fileList) {
-      var self   = this;
-      var token  = getCMSToken();
-      if (!token) {
-        this.setState({ showTokenForm: true });
-        return;
-      }
-
-      var files = Array.from(fileList).filter(function (f) { return f.type.startsWith('image/'); });
-      if (!files.length) return;
-
-      // Mark all files as queued, then upload one at a time.
-      // GitHub's API rejects concurrent write requests — sequential is required.
-      var initialProgress = files.map(function (f) {
-        return { name: f.name, status: 'queued' };
-      });
-      self.setState({ uploading: true, progress: initialProgress });
-
-      var collectedPaths = [];
-
-      // Recursive sequential uploader
-      function uploadNext(i) {
-        if (i >= files.length) {
-          // All done — commit new paths to the field value
-          self.props.onChange(self.getImages().concat(collectedPaths));
-          self.setState({ uploading: false });
-          setTimeout(function () { self.setState({ progress: [] }); }, 4000);
-          return;
-        }
-
-        // Mark current file as uploading
-        self.setState(function (prev) {
-          var p = prev.progress.slice();
-          p[i] = { name: files[i].name, status: 'uploading' };
-          return { progress: p };
-        });
-
-        uploadFileToGitHub(files[i], token)
-          .then(function (path) {
-            collectedPaths.push(path);
-            self.setState(function (prev) {
-              var p = prev.progress.slice();
-              p[i] = { name: files[i].name, status: 'done' };
-              return { progress: p };
-            });
-            uploadNext(i + 1);
-          })
-          .catch(function (err) {
-            self.setState(function (prev) {
-              var p = prev.progress.slice();
-              p[i] = { name: files[i].name, status: 'error', err: err.message };
-              return { progress: p };
-            });
-            uploadNext(i + 1); // continue with remaining files even if one fails
-          });
-      }
-
-      uploadNext(0);
-    },
-
-    removeImage: function (index) {
-      var imgs = this.getImages();
-      this.props.onChange(imgs.filter(function (_, i) { return i !== index; }));
-    },
-
-    saveToken: function () {
-      var t = this.state.tokenInput.trim();
-      if (!t) return;
-      saveUploadToken(t);
-      this.setState({ showTokenForm: false, tokenInput: '' });
-    },
-
-    render: function () {
-      var self      = this;
-      var uploading = this.state.uploading;
-      var progress  = this.state.progress;
-      var images    = this.getImages();
-      var inputId   = 'multi-img-' + this.props.forID;
-
-      /* ── Token setup form (shown once if no token is found) ── */
-      if (this.state.showTokenForm) {
-        return h('div', { id: this.props.forID },
-          h('div', {
-            style: {
-              border: '1px solid #e0c97a', borderRadius: '8px',
-              padding: '20px 24px', background: '#fffdf0',
-            },
-          },
-            h('p', { style: { margin: '0 0 6px', fontWeight: 700, fontSize: '14px', color: '#333' } },
-              '🔑 One-time setup: GitHub upload token'),
-            h('p', { style: { margin: '0 0 14px', fontSize: '13px', color: '#666', lineHeight: 1.5 } },
-              'To upload images, paste a GitHub Personal Access Token with ',
-              h('strong', null, 'repo'), ' scope. ',
-              h('a', { href: 'https://github.com/settings/tokens/new?scopes=repo&description=Sleepover+Club+image+upload', target: '_blank', style: { color: '#1a6bb5' } }, 'Generate one here ↗'),
-              ' — you only need to do this once.'
-            ),
-            h('div', { style: { display: 'flex', gap: '8px' } },
-              h('input', {
-                type: 'password',
-                placeholder: 'ghp_xxxxxxxxxxxxxxxxxxxx',
-                value: this.state.tokenInput,
-                style: { flex: 1, padding: '8px 12px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '13px' },
-                onChange: function (e) { self.setState({ tokenInput: e.target.value }); },
-                onKeyDown: function (e) { if (e.key === 'Enter') self.saveToken(); },
-              }),
-              h('button', {
-                type: 'button',
-                style: { padding: '8px 16px', background: '#1a6bb5', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, fontSize: '13px' },
-                onClick: function () { self.saveToken(); },
-              }, 'Save')
-            )
-          )
-        );
-      }
-
-
-      return h('div', { id: this.props.forID },
-
-        /* ── Drop zone ── */
-        h('label', {
-          htmlFor: inputId,
-          style: {
-            display: 'block',
-            border: '2px dashed #bbb',
-            borderRadius: '8px',
-            padding: '32px 24px',
-            textAlign: 'center',
-            cursor: uploading ? 'not-allowed' : 'pointer',
-            background: uploading ? '#f5f5f5' : '#fafafa',
-            marginBottom: '14px',
-            transition: 'background 0.15s',
-          },
-          onDragOver: function (e) { e.preventDefault(); },
-          onDrop: function (e) {
-            e.preventDefault();
-            if (!uploading) self.handleFiles(e.dataTransfer.files);
-          },
-        },
-          h('input', {
-            id: inputId,
-            type: 'file',
-            multiple: true,
-            accept: 'image/*',
-            style: { display: 'none' },
-            disabled: uploading,
-            onChange: function (e) { self.handleFiles(e.target.files); },
-          }),
-          uploading
-            ? h('p', { style: { margin: 0, color: '#555', fontSize: '14px' } }, '⏳ Uploading images to GitHub…')
-            : h('div', null,
-                h('p', { style: { margin: '0 0 6px', fontWeight: 700, fontSize: '14px', color: '#333' } },
-                  '📁 Click to select images'),
-                h('p', { style: { margin: 0, color: '#888', fontSize: '12px' } },
-                  'Hold Ctrl / Cmd to select multiple at once · Drag & drop also works')
-              )
-        ),
-
-        /* ── Upload progress list ── */
-        progress.length > 0 && h('div', {
-          style: {
-            marginBottom: '14px', padding: '10px 14px',
-            background: '#f4f4f4', borderRadius: '6px', fontSize: '13px',
-          },
-        },
-          progress.map(function (p, i) {
-            var colour = p.status === 'done'      ? '#2e7d32'
-                       : p.status === 'error'     ? '#b71c1c'
-                       : p.status === 'uploading' ? '#1a6bb5'
-                       : '#999';
-            var icon   = p.status === 'done'      ? '✓'
-                       : p.status === 'error'     ? '✗'
-                       : p.status === 'uploading' ? '⏳'
-                       : '·';
-            return h('div', { key: i, style: { padding: '2px 0', color: colour } },
-              icon + ' ' + p.name + (p.err ? ' — ' + p.err : '')
-            );
-          })
-        ),
-
-        /* ── Thumbnail grid ── */
-        images.length > 0 && h('div', {
-          style: {
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))',
-            gap: '8px',
-          },
-        },
-          images.map(function (src, i) {
-            return h('div', {
-              key: src + i,
-              style: {
-                position: 'relative', aspectRatio: '1',
-                borderRadius: '4px', overflow: 'hidden', background: '#ddd',
-              },
-            },
-              h('img', {
-                src: '/' + src, alt: '',
-                style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' },
-              }),
-              h('button', {
-                type: 'button',
-                title: 'Remove',
-                style: {
-                  position: 'absolute', top: '4px', right: '4px',
-                  width: '22px', height: '22px', borderRadius: '50%',
-                  background: 'rgba(0,0,0,0.65)', color: '#fff',
-                  border: 'none', cursor: 'pointer', fontSize: '14px',
-                  lineHeight: '22px', textAlign: 'center', padding: 0,
-                },
-                onClick: function () { self.removeImage(i); },
-              }, '×')
-            );
-          })
-        ),
-
-        /* ── Empty state ── */
-        images.length === 0 && progress.length === 0 && h('p', {
-          style: { color: '#aaa', fontSize: '12px', margin: '4px 0 0' },
-        }, 'No photos added yet.'),
-
-        /* ── Change token link ── */
-        h('p', { style: { margin: '10px 0 0', fontSize: '11px', color: '#bbb' } },
-          h('a', {
-            href: '#',
-            style: { color: '#bbb' },
-            onClick: function (e) { e.preventDefault(); self.setState({ showTokenForm: true, tokenInput: '' }); },
-          }, 'Change upload token')
-        )
-      );
-    },
+  // Delete
+  document.getElementById('del-btn')?.addEventListener('click', async () => {
+    if (!confirm('Delete this event? This cannot be undone.')) return;
+    S.events = S.events.filter(e => e.id !== S.editId);
+    try { await saveEvents(); toast('Event deleted'); go('events'); }
+    catch(e) { toast('Delete failed: ' + e.message, 'err'); }
   });
+}
 
-  /* Register the widget so it can be used in the config below */
-  CMS.registerWidget('multi-image', MultiImageWidget);
+// ═══════════════════════════════════════════════════
+//  ARTIST EDITOR
+// ═══════════════════════════════════════════════════
+function editArtistHTML() {
+  const base = S.editId ? (S.artists.find(a=>a.id===S.editId) || blankArtist()) : blankArtist();
+  _draft = clone(base);
+  const it = _draft;
+  const isNew = !S.editId;
+  const soc = it.socials || {};
 
-  /* =============================================================
-     CMS INITIALISATION
-  ============================================================= */
-  CMS.init({
-    config: {
-      backend: {
-        name: 'github',
-        repo: 'dav294/sleepover-club',
-        branch: 'main',
-        base_url: 'https://sleepover-club.vercel.app',
-        auth_endpoint: 'api/auth',
-      },
+  return `
+  <div class="ed-layout">
+    <div class="ed-form">
+      <div class="ed-form-header">
+        <div class="ed-form-title">${isNew ? 'New Artist' : 'Edit Artist'}</div>
+        <div class="ed-actions">
+          ${!isNew ? `<button class="btn btn-danger" id="del-btn">Delete</button>` : ''}
+          <button class="btn btn-primary" id="save-btn">Save &amp; Publish</button>
+        </div>
+      </div>
 
-      media_folder:  'assets/images/uploads',
-      public_folder: 'assets/images/uploads',
-      site_url:      'https://sleepover-club.vercel.app',
+      <div class="sec">Basic Info</div>
 
-      collections: [
+      <div class="fg"><label>Name</label>
+        <input type="text" id="f-name" value="${esc(it.name)}" placeholder="Artist name"></div>
 
-        // ── EVENTS ────────────────────────────────────────────────
-        {
-          name: 'events', label: 'Events',
-          files: [{
-            name: 'all_events', label: 'All Events',
-            file: 'data/events.json',
-            description: 'Add, edit, and reorder all Sleepover Club events here.',
-            fields: [{
-              label: 'Events', name: 'items', widget: 'list',
-              summary: '{{fields.title}} — {{fields.date}}',
-              fields: [
-                { label: 'ID (unique slug)',   name: 'id',             widget: 'string',   hint: 'Lowercase, no spaces. e.g. vol-50, vol-48-london' },
-                { label: 'Title',              name: 'title',          widget: 'string' },
-                { label: 'Subtitle',           name: 'subtitle',       widget: 'string',   required: false },
-                { label: 'Status',             name: 'status',         widget: 'select',   options: [{ label: 'Upcoming', value: 'upcoming' }, { label: 'Past', value: 'past' }], default: 'past' },
-                { label: 'Date',               name: 'date',           widget: 'datetime', format: 'YYYY-MM-DD', date_format: 'DD MMMM YYYY', time_format: false },
-                { label: 'Doors Time',         name: 'doorsTime',      widget: 'string',   hint: 'e.g. 20:00' },
-                { label: 'End Time',           name: 'endTime',        widget: 'string',   required: false },
-                { label: 'Venue',              name: 'venue',          widget: 'string' },
-                { label: 'Address',            name: 'address',        widget: 'string',   required: false },
-                { label: 'City',               name: 'city',           widget: 'string',   hint: 'e.g. Dublin, London, Belfast, Galway' },
-                { label: 'Country',            name: 'country',        widget: 'string',   default: 'Ireland' },
-                { label: 'Age Restriction',    name: 'ageRestriction', widget: 'string',   default: '18+' },
-                { label: 'Cover Image',        name: 'coverImage',     widget: 'image',    required: false, hint: 'Landscape or square — used as the hero background' },
-                { label: 'Poster (A4)',        name: 'poster',         widget: 'image',    required: false, hint: 'Portrait promotional poster — shown in the sidebar' },
-                { label: 'Gallery Photos',     name: 'gallery',        widget: 'multi-image', required: false },
-                { label: 'Video Embed URL',    name: 'videoEmbed',     widget: 'string',   required: false, hint: 'YouTube or Vimeo embed src — e.g. https://www.youtube.com/embed/VIDEO_ID' },
-                { label: 'Short Description',  name: 'shortDesc',      widget: 'text',     hint: '1–2 sentences used on event cards' },
-                { label: 'Full Description',   name: 'fullDesc',       widget: 'text' },
-                { label: 'Ticket Link',        name: 'ticketLink',     widget: 'string',   required: false },
-                { label: 'Sold Out',           name: 'soldOut',        widget: 'boolean',  default: false },
-                { label: 'Tags',               name: 'tags',           widget: 'list',     required: false, field: { label: 'Tag', name: 'tag', widget: 'string' } },
-                { label: 'Artist IDs',         name: 'artistIds',      widget: 'list',     required: false, field: { label: 'Artist ID', name: 'artistId', widget: 'string' } },
-              ],
-            }],
-          }],
-        },
+      <div class="row">
+        <div class="fg"><label>ID / Slug</label>
+          <input type="text" id="f-id" value="${esc(it.id)}" placeholder="artist-name" ${!isNew?'readonly':''}>
+          <div class="hint">Auto-generated from name if blank.</div></div>
+        <div class="fg"><label>Genre</label>
+          <input type="text" id="f-genre" value="${esc(it.genre)}" placeholder="Indie / Folk"></div>
+      </div>
 
-        // ── ARTISTS ───────────────────────────────────────────────
-        {
-          name: 'artists', label: 'Artists',
-          files: [{
-            name: 'all_artists', label: 'All Artists',
-            file: 'data/artists.json',
-            description: 'Add, edit, and manage all artists here.',
-            fields: [{
-              label: 'Artists', name: 'items', widget: 'list',
-              summary: '{{fields.name}} — {{fields.genre}}',
-              fields: [
-                { label: 'ID (unique slug)',       name: 'id',              widget: 'string',      hint: 'Lowercase, no spaces. e.g. girl-band, john-doe' },
-                { label: 'Name',                   name: 'name',            widget: 'string' },
-                { label: 'Genre',                  name: 'genre',           widget: 'string',      hint: 'e.g. Indie / Folk, Electronic' },
-                { label: 'Origin',                 name: 'origin',          widget: 'string',      hint: 'e.g. Dublin, Ireland' },
-                { label: 'Biography',              name: 'bio',             widget: 'text' },
-                { label: 'Featured on Homepage',   name: 'featured',        widget: 'boolean',     default: true, hint: 'Shows artist in the scrolling ticker on the homepage' },
-                { label: 'Cover Image',            name: 'coverImage',      widget: 'image',       required: false },
-                { label: 'Gallery Photos',         name: 'gallery',         widget: 'multi-image', required: false },
-                { label: 'Video Embed URL',        name: 'videoEmbed',      widget: 'string',      required: false, hint: 'YouTube or Vimeo embed src URL' },
-                { label: 'Social Links',           name: 'socials',         widget: 'object',
-                  fields: [
-                    { label: 'Instagram URL',  name: 'instagram',  widget: 'string', required: false },
-                    { label: 'Spotify URL',    name: 'spotify',    widget: 'string', required: false },
-                    { label: 'SoundCloud URL', name: 'soundcloud', widget: 'string', required: false },
-                    { label: 'Bandcamp URL',   name: 'bandcamp',   widget: 'string', required: false },
-                    { label: 'YouTube URL',    name: 'youtube',    widget: 'string', required: false },
-                    { label: 'TikTok URL',     name: 'tiktok',     widget: 'string', required: false },
-                  ],
-                },
-                { label: 'Shopify Merch Embed', name: 'shopifyEmbedCode', widget: 'text',   required: false, hint: 'Paste the full Shopify Buy Button HTML here' },
-                { label: 'Event IDs',           name: 'eventIds',         widget: 'list',   required: false, field: { label: 'Event ID', name: 'eventId', widget: 'string' } },
-              ],
-            }],
-          }],
-        },
+      <div class="fg"><label>Origin</label>
+        <input type="text" id="f-origin" value="${esc(it.origin)}" placeholder="Dublin, Ireland"></div>
 
-      ],
-    },
+      <div class="fg"><label>Biography</label>
+        <textarea id="f-bio" style="min-height:140px" placeholder="Artist biography…">${esc(it.bio)}</textarea></div>
+
+      <div class="fg"><div class="toggle-row"><span class="toggle-row-label">Featured on Homepage</span>
+        <label class="tog"><input type="checkbox" id="f-featured" ${it.featured?'checked':''}><span class="tog-slider"></span></label></div>
+        <div class="hint" style="margin-top:6px">Shows the artist in the scrolling ticker on the homepage</div></div>
+
+      <div class="sec">Media</div>
+
+      <div class="fg"><label>Cover Image</label>
+        <div id="cover-zone">${imgZone('cover', it.coverImage)}</div>
+        <input type="file" id="if-cover" accept="image/*" style="display:none"></div>
+
+      <div class="fg"><label>Gallery Photos</label>
+        <div id="gal-zone-thumbs">${galleryHTML(it.gallery)}</div>
+        <div class="img-zone" id="gal-zone" style="margin-top:8px">
+          <label for="gal-file" style="cursor:pointer;display:block"><div style="font-size:20px">📁</div><p>Click to add photos · drag &amp; drop works too</p></label>
+          <input type="file" id="gal-file" accept="image/*" multiple style="display:none">
+        </div></div>
+
+      <div class="fg"><label>Video Embed URL <span style="font-weight:400;text-transform:none">(optional)</span></label>
+        <input type="url" id="f-video" value="${esc(it.videoEmbed)}" placeholder="https://www.youtube.com/embed/VIDEO_ID"></div>
+
+      <div class="sec">Social Links</div>
+      ${[['instagram','Instagram','https://instagram.com/artistname'],
+         ['spotify','Spotify','https://open.spotify.com/artist/...'],
+         ['soundcloud','SoundCloud','https://soundcloud.com/...'],
+         ['bandcamp','Bandcamp','https://artistname.bandcamp.com'],
+         ['youtube','YouTube','https://youtube.com/@artistname'],
+         ['tiktok','TikTok','https://tiktok.com/@artistname'],
+        ].map(([k,l,p])=>`<div class="fg"><label>${l}</label><input type="url" id="soc-${k}" value="${esc(soc[k]||'')}" placeholder="${p}"></div>`).join('')}
+
+      <div class="sec">Merch &amp; Events</div>
+
+      <div class="fg"><label>Shopify Merch Embed <span style="font-weight:400;text-transform:none">(optional)</span></label>
+        <textarea id="f-shopify" placeholder="Paste full Shopify Buy Button HTML here">${esc(it.shopifyEmbedCode)}</textarea></div>
+
+      <div class="fg"><label>Event IDs</label>
+        <div class="tags-wrap" id="tw-eids">
+          ${tagsHTML(it.eventIds||[], 'tw-eids')}
+          <input class="tag-input" id="ti-eids" placeholder="Add event ID, press Enter">
+        </div>
+        <div class="hint">Reference the ID of each event this artist has performed at</div></div>
+
+      <div style="height:60px"></div>
+    </div>
+
+    <div class="ed-preview">
+      <div class="pv-label">Preview</div>
+      <div id="pv">${arPreview(_draft)}</div>
+    </div>
+  </div>`; }
+
+function bindEditArtist() {
+  const it = _draft;
+
+  function collectBasic() {
+    it.name             = val('f-name');
+    it.id               = val('f-id') || it.id;
+    it.genre            = val('f-genre');
+    it.origin           = val('f-origin');
+    it.bio              = val('f-bio');
+    it.videoEmbed       = val('f-video');
+    it.shopifyEmbedCode = val('f-shopify');
+    it.featured         = document.getElementById('f-featured')?.checked || false;
+    it.socials = {
+      instagram:  val('soc-instagram'),
+      spotify:    val('soc-spotify'),
+      soundcloud: val('soc-soundcloud'),
+      bandcamp:   val('soc-bandcamp'),
+      youtube:    val('soc-youtube'),
+      tiktok:     val('soc-tiktok'),
+    };
+  }
+
+  const refreshPreview = () => { collectBasic(); document.getElementById('pv').innerHTML = arPreview(it); };
+
+  ['f-name','f-genre','f-origin','f-bio'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', refreshPreview);
   });
-  </script>
+  document.getElementById('f-featured')?.addEventListener('change', refreshPreview);
+
+  // Cover
+  bindImgUpload('cover', p => { it.coverImage=p; document.getElementById('cover-zone').innerHTML=imgZone('cover',p); bindRmImg(); refreshPreview(); });
+
+  // Gallery
+  bindGalleryUpload(p => { if(!it.gallery) it.gallery=[]; it.gallery.push(p); document.getElementById('gal-zone-thumbs').innerHTML=galleryHTML(it.gallery); bindRmGal(); });
+
+  function bindRmImg() {
+    document.querySelectorAll('[data-rm-img="cover"]').forEach(btn => {
+      btn.onclick = () => { it.coverImage=''; document.getElementById('cover-zone').innerHTML=imgZone('cover',''); bindImgUpload('cover', p=>{it.coverImage=p;document.getElementById('cover-zone').innerHTML=imgZone('cover',p);bindRmImg();refreshPreview();}); refreshPreview(); };
+    });
+  }
+  function bindRmGal() {
+    document.querySelectorAll('[data-rm-gal]').forEach(btn => {
+      btn.onclick = () => { it.gallery.splice(parseInt(btn.dataset.rmGal),1); document.getElementById('gal-zone-thumbs').innerHTML=galleryHTML(it.gallery); bindRmGal(); };
+    });
+  }
+  bindRmImg(); bindRmGal();
+
+  // Tags
+  setupTags('tw-eids', 'ti-eids', ()=>it.eventIds, a=>{it.eventIds=a;});
+
+  // Save
+  document.getElementById('save-btn').onclick = async () => {
+    collectBasic();
+    if (!it.id) it.id = slug(it.name);
+    if (!it.id) { toast('Add a name or ID first', 'err'); return; }
+    const btn = document.getElementById('save-btn');
+    btn.disabled=true; btn.textContent='Saving…';
+    try {
+      const idx = S.artists.findIndex(a => a.id===it.id);
+      if (idx>=0) S.artists[idx]=it; else S.artists.unshift(it);
+      await saveArtists();
+      toast('Artist saved & published');
+      S.editId = it.id;
+      go('edit-artist', it.id);
+    } catch(e) { toast('Save failed: ' + e.message, 'err'); btn.disabled=false; btn.textContent='Save & Publish'; }
+  };
+
+  document.getElementById('del-btn')?.addEventListener('click', async () => {
+    if (!confirm('Delete this artist? This cannot be undone.')) return;
+    S.artists = S.artists.filter(a => a.id!==S.editId);
+    try { await saveArtists(); toast('Artist deleted'); go('artists'); }
+    catch(e) { toast('Delete failed: ' + e.message, 'err'); }
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  PREVIEW CARDS
+// ═══════════════════════════════════════════════════
+function evPreview(it) { return `
+  <div class="pv-card">
+    ${it.coverImage ? `<img class="pv-cover" src="/${esc(it.coverImage)}" onerror="this.style.opacity='.2'">` : `<div class="pv-cover-ph">No cover image</div>`}
+    <div class="pv-body">
+      ${it.status==='upcoming' ? `<span class="badge badge-up" style="display:inline-block;margin-bottom:8px">Upcoming</span>` : ''}
+      <div class="pv-title">${esc(it.title)||'<em style="opacity:.35">Event title</em>'}</div>
+      <div class="pv-meta">
+        ${it.date     ? `<span>${fmtDate(it.date)}</span>` : ''}
+        ${it.doorsTime? `<span>Doors ${esc(it.doorsTime)}</span>` : ''}
+        ${it.venue    ? `<span>${esc(it.venue)}</span>` : ''}
+        ${it.city     ? `<span>${esc(it.city)}</span>` : ''}
+      </div>
+      ${it.shortDesc ? `<div class="pv-desc">${esc(it.shortDesc)}</div>` : ''}
+      ${it.ticketLink ? `<a href="${esc(it.ticketLink)}" target="_blank" style="display:inline-block;margin-top:12px;padding:7px 14px;background:var(--accent);color:#000;border-radius:6px;font-size:12px;font-weight:700;text-decoration:none">${it.soldOut?'Sold Out':'Get Tickets'}</a>` : ''}
+    </div>
+  </div>
+  ${(it.tags||[]).length ? `<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px">${it.tags.map(t=>`<span class="badge badge-past">${esc(t)}</span>`).join('')}</div>` : ''}`; }
+
+function arPreview(it) { return `
+  <div class="pv-card">
+    ${it.coverImage ? `<img class="pv-cover" src="/${esc(it.coverImage)}" onerror="this.style.opacity='.2'" style="aspect-ratio:1;object-fit:cover">` : `<div class="pv-cover-ph" style="aspect-ratio:1">No cover image</div>`}
+    <div class="pv-body">
+      <div class="pv-title">${esc(it.name)||'<em style="opacity:.35">Artist name</em>'}</div>
+      <div class="pv-meta">
+        ${it.genre  ? `<span>${esc(it.genre)}</span>`  : ''}
+        ${it.origin ? `<span>${esc(it.origin)}</span>` : ''}
+      </div>
+      ${it.bio ? `<div class="pv-desc">${esc(it.bio).substring(0,200)}${it.bio.length>200?'…':''}</div>` : ''}
+      ${it.featured ? `<span class="badge badge-up" style="display:inline-block;margin-top:10px">Featured</span>` : ''}
+    </div>
+  </div>`; }
+
+// ═══════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════
+if (tok()) { loadAll(); } else { render(); }
+</script>
 </body>
 </html>
