@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Block admin panel from indexing
+Disallow: /admin/
+
+# Block dynamic event/artist detail templates (no standalone SEO value)
+Disallow: /events/event.html
+Disallow: /artists/artist.html
+
+# Block Google verification file
+Disallow: /google09655dff1d5b28f6.html
+
+Sitemap: https://www.sleepover.club/sitemap.xml
