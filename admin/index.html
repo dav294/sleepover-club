@@ -165,11 +165,9 @@
 
 <script>
 // ═══════════════════════════════════════════════════
-//  CONFIG
+//  CONFIG  (GitHub credentials live in Vercel env vars — never in the browser)
 // ═══════════════════════════════════════════════════
-const REPO    = 'dav294/sleepover-club';
-const BRANCH  = 'main';
-const TOK_KEY = 'sc-upload-token';
+const TOK_KEY = 'sc-session-token';
 
 // ═══════════════════════════════════════════════════
 //  STATE
@@ -186,46 +184,56 @@ let S = {
 let _draft = null;    // working copy of item being edited
 
 // ═══════════════════════════════════════════════════
-//  GITHUB API
+//  CMS API  (proxy — GitHub credentials stay server-side)
 // ═══════════════════════════════════════════════════
 const tok = () => localStorage.getItem(TOK_KEY);
-const hdrs = () => ({ Authorization: 'token ' + tok(), 'Content-Type': 'application/json' });
 
-async function ghRead(path) {
-  const r = await fetch(`https://api.github.com/repos/${REPO}/contents/${path}`, {
-    headers: { Authorization: 'token ' + tok(), Accept: 'application/vnd.github.v3+json' },
-  });
-  if (!r.ok) throw new Error('GitHub ' + r.status + ' reading ' + path);
-  const j = await r.json();
-  const text = decodeURIComponent(escape(atob(j.content.replace(/\n/g, ''))));
-  return { data: JSON.parse(text), sha: j.sha };
+function authedHeaders() {
+  return { Authorization: 'Bearer ' + tok(), 'Content-Type': 'application/json' };
 }
 
-async function ghWrite(path, data, sha, msg) {
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
-  const body = { message: msg, content, branch: BRANCH };
-  if (sha) body.sha = sha;
-  const r = await fetch(`https://api.github.com/repos/${REPO}/contents/${path}`, {
-    method: 'PUT', headers: hdrs(), body: JSON.stringify(body),
-  });
-  if (!r.ok) throw new Error('GitHub ' + r.status + ' writing ' + path);
-  return (await r.json()).content.sha;
+async function handleUnauth() {
+  localStorage.removeItem(TOK_KEY);
+  render();
+  throw new Error('Session expired — please log in again.');
 }
 
-async function ghUpload(file) {
+async function apiRead(path) {
+  const r = await fetch('/api/cms/proxy?path=' + encodeURIComponent(path), {
+    headers: { Authorization: 'Bearer ' + tok() },
+  });
+  if (r.status === 401) return handleUnauth();
+  if (!r.ok) throw new Error('Read error ' + r.status);
+  return r.json(); // { data, sha }
+}
+
+async function apiWrite(path, data, sha, msg) {
+  const r = await fetch('/api/cms/proxy', {
+    method: 'PUT',
+    headers: authedHeaders(),
+    body: JSON.stringify({ path, data, sha, message: msg }),
+  });
+  if (r.status === 401) return handleUnauth();
+  if (!r.ok) throw new Error('Write error ' + r.status);
+  return (await r.json()).sha;
+}
+
+async function apiUpload(file) {
   return new Promise((res, rej) => {
     const fr = new FileReader();
     fr.onerror = rej;
     fr.onload = async e => {
-      const b64  = e.target.result.split(',')[1];
-      const name = file.name.replace(/[^a-zA-Z0-9._-]/g, '-').toLowerCase();
-      const path = 'assets/images/uploads/' + Date.now() + '-' + name;
-      const r = await fetch(`https://api.github.com/repos/${REPO}/contents/${path}`, {
-        method: 'PUT', headers: hdrs(),
-        body: JSON.stringify({ message: 'Upload: ' + file.name, content: b64 }),
-      });
-      if (!r.ok) throw new Error('Upload failed ' + r.status);
-      res(path);
+      const content = e.target.result.split(',')[1];
+      try {
+        const r = await fetch('/api/cms/upload', {
+          method: 'POST',
+          headers: authedHeaders(),
+          body: JSON.stringify({ name: file.name, content }),
+        });
+        if (r.status === 401) { localStorage.removeItem(TOK_KEY); render(); rej(new Error('Session expired')); return; }
+        if (!r.ok) { rej(new Error('Upload failed ' + r.status)); return; }
+        res((await r.json()).path);
+      } catch(e) { rej(e); }
     };
     fr.readAsDataURL(file);
   });
@@ -237,7 +245,7 @@ async function ghUpload(file) {
 async function loadAll() {
   S.busy = true; render();
   try {
-    const [ev, ar] = await Promise.all([ghRead('data/events.json'), ghRead('data/artists.json')]);
+    const [ev, ar] = await Promise.all([apiRead('data/events.json'), apiRead('data/artists.json')]);
     S.events  = ev.data.items || [];
     S.evSha   = ev.sha;
     S.artists = ar.data.items || [];
@@ -246,8 +254,8 @@ async function loadAll() {
   S.busy = false; render();
 }
 
-async function saveEvents()  { S.evSha = await ghWrite('data/events.json',  { items: S.events  }, S.evSha, 'CMS: update events');  }
-async function saveArtists() { S.arSha = await ghWrite('data/artists.json', { items: S.artists }, S.arSha, 'CMS: update artists'); }
+async function saveEvents()  { S.evSha = await apiWrite('data/events.json',  { items: S.events  }, S.evSha, 'CMS: update events');  }
+async function saveArtists() { S.arSha = await apiWrite('data/artists.json', { items: S.artists }, S.arSha, 'CMS: update artists'); }
 
 // ═══════════════════════════════════════════════════
 //  TOAST
@@ -310,23 +318,49 @@ function authHTML() { return `
     <div class="auth-logo">Sleepover Club</div>
     <div class="auth-sub">Admin — content management</div>
     <div class="fg">
-      <label>GitHub Personal Access Token</label>
-      <input type="password" id="pat" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
-      <div class="hint">Needs <strong>repo</strong> scope. &nbsp;<a href="https://github.com/settings/tokens/new?scopes=repo&description=Sleepover+Club+CMS" target="_blank" style="color:var(--accent)">Generate one ↗</a></div>
+      <label>Password</label>
+      <input type="password" id="pat" placeholder="Enter admin password" autocomplete="current-password">
     </div>
     <button class="btn btn-primary" id="auth-btn" style="width:100%;justify-content:center;padding:12px 18px">Log in</button>
+    <p id="auth-err" style="display:none;margin-top:12px;font-size:13px;color:var(--danger);text-align:center">Incorrect password. Please try again.</p>
   </div></div>`; }
 
 function bindAuth() {
-  const btn = document.getElementById('auth-btn');
+  const btn   = document.getElementById('auth-btn');
   const input = document.getElementById('pat');
-  const go = async () => {
-    const v = input.value.trim(); if (!v) return;
-    localStorage.setItem(TOK_KEY, v);
-    await loadAll();
+  const errEl = document.getElementById('auth-err');
+
+  const attempt = async () => {
+    const v = input.value.trim();
+    if (!v) return;
+    btn.disabled = true;
+    btn.textContent = 'Logging in…';
+    errEl.style.display = 'none';
+    try {
+      const r = await fetch('/api/cms/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: v }),
+      });
+      if (!r.ok) {
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Log in';
+        return;
+      }
+      const { token } = await r.json();
+      localStorage.setItem(TOK_KEY, token);
+      await loadAll();
+    } catch (e) {
+      errEl.textContent = 'Connection error. Please try again.';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Log in';
+    }
   };
-  btn.onclick = go;
-  input.addEventListener('keydown', e => { if (e.key==='Enter') go(); });
+
+  btn.onclick = attempt;
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') attempt(); });
 }
 
 // ─── HEADER ─────────────────────────────────────────
@@ -462,7 +496,7 @@ function bindImgUpload(type, onDone) {
 
 async function doImgUpload(file, type, onDone) {
   toast('Uploading…');
-  try { const p = await ghUpload(file); onDone(p); toast('Uploaded'); }
+  try { const p = await apiUpload(file); onDone(p); toast('Uploaded'); }
   catch(e) { toast('Upload failed: ' + e.message, 'err'); }
 }
 
@@ -481,7 +515,7 @@ async function doGalleryUpload(files, onDone) {
   if (!arr.length) return;
   toast('Uploading ' + arr.length + ' image(s)…');
   for (const f of arr) {
-    try { onDone(await ghUpload(f)); }
+    try { onDone(await apiUpload(f)); }
     catch(e) { toast('Upload failed: ' + e.message, 'err'); }
   }
   toast('Gallery updated');
