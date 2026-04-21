@@ -6,8 +6,8 @@ const crypto = require('crypto');
 const EXPIRES_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 function createToken() {
-  const secret = process.env.ADMIN_TOKEN_SECRET;
-  if (!secret) throw new Error('ADMIN_TOKEN_SECRET env var not set');
+  const secret = process.env.ADMIN_SECRET_TOKEN;
+  if (!secret) throw new Error('ADMIN_SECRET_TOKEN env var not set');
   const payload = Buffer.from(JSON.stringify({
     iat: Date.now(),
     exp: Date.now() + EXPIRES_MS,
@@ -20,7 +20,7 @@ function createToken() {
 }
 
 function verifyToken(token) {
-  const secret = process.env.ADMIN_TOKEN_SECRET;
+  const secret = process.env.ADMIN_SECRET_TOKEN;
   if (!secret || !token || typeof token !== 'string') return false;
   const dot = token.lastIndexOf('.');
   if (dot < 1) return false;
